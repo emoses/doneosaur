@@ -51,10 +51,24 @@ defmodule AdhdoWeb.TaskListHelpers do
     {:noreply, socket}
   end
 
-  def handle_reset(_, socket) do
+  def handle_reset_event(_, socket) do
     list_id = socket.assigns.task_list.id
 
     :ok = Sessions.reset_session(list_id)
+
+    {:noreply, socket}
+  end
+
+  def handle_reload(socket) do
+    socket = case Lists.get_task_list!(socket.assigns.task_list.id) do
+      nil ->
+        socket
+        |> assign(:task_list, nil)
+
+      task_list ->
+        socket
+        |> assign(:task_list, task_list)
+    end
 
     {:noreply, socket}
   end

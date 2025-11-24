@@ -100,6 +100,13 @@ defmodule Adhdo.Sessions do
   end
 
   @doc """
+  Resets a task list and asks clients to reload its data
+  """
+  def reload_list(list_id) do
+    ListSession.reload(list_id)
+  end
+
+  @doc """
   Returns the PubSub topic for a task list.
   """
   def topic(list_id), do: ListSession.topic(list_id)

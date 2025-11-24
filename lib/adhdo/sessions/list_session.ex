@@ -50,6 +50,13 @@ defmodule Adhdo.Sessions.ListSession do
   end
 
   @doc """
+  Resets the session and asks all clients to reload their tasks
+  """
+  def reload(list_id) do
+    GenServer.call(via_tuple(list_id), :reload)
+  end
+
+  @doc """
   Returns the PubSub topic for this list.
   """
   def topic(list_id), do: "task_list:#{list_id}"
@@ -92,6 +99,13 @@ defmodule Adhdo.Sessions.ListSession do
   def handle_call(:reset, _from, state) do
     new_state = %{state | completed_tasks: MapSet.new()}
     PubSub.broadcast(@pubsub, topic(state.list_id), {:updated, {:session_reset}})
+    {:reply, :ok, new_state}
+  end
+
+  @impl true
+  def handle_call(:reload, _from, state) do
+    new_state = %{state | completed_tasks: MapSet.new()}
+    PubSub.broadcast(@pubsub, topic(state.list_id), {:reload})
     {:reply, :ok, new_state}
   end
 

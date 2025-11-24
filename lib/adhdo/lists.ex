@@ -153,4 +153,33 @@ defmodule Adhdo.Lists do
       end
     end)
   end
+
+  def update_task_list_and_tasks(task_list, attrs, task_attrs) do
+    import Ecto.Query
+
+    Repo.transaction(fn ->
+      case update_task_list(task_list, attrs) do
+        {:ok, updated_list} ->
+          # Delete all existing tasks for this task list
+          from(t in Task, where: t.task_list_id == ^updated_list.id)
+          |> Repo.delete_all()
+
+          # Insert all new tasks
+          task_attrs
+          |> Enum.with_index(1)
+          |> Enum.each(fn {task_data, order} ->
+            create_task(%{
+              text: task_data.text,
+              order: order,
+              task_list_id: updated_list.id
+            })
+          end)
+
+          updated_list
+
+        {:error, changeset} ->
+          Repo.rollback(changeset)
+      end
+    end)
+  end
 end

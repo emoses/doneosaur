@@ -20,12 +20,17 @@ defmodule AdhdoWeb.TaskListLive do
 
   @impl true
   def handle_event("reset_list", params, socket) do
-    TaskListHelpers.handle_reset(params, socket)
+    TaskListHelpers.handle_reset_event(params, socket)
   end
 
   @impl true
   def handle_info({:updated, _}, socket) do
     TaskListHelpers.handle_updated_info(socket)
+  end
+
+  @impl true
+  def handle_info({:reload}, socket) do
+    TaskListHelpers.handle_reload(socket)
   end
 
   @impl true

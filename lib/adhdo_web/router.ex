@@ -22,6 +22,14 @@ defmodule AdhdoWeb.Router do
     live "/lists/:id", TaskListLive
   end
 
+  scope "/admin", AdhdoWeb.Admin do
+    pipe_through :browser
+
+    live "/", IndexLive
+    live "/lists/new", FormLive, :new
+    live "/lists/:id/edit", FormLive, :edit
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", AdhdoWeb do
   #   pipe_through :api

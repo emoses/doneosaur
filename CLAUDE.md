@@ -45,8 +45,8 @@ Adhdo is a Phoenix 1.8 web application for managing recurring task lists, design
 - `mix test --failed` - Rerun previously failed tests
 
 ### Assets
-- `mix assets.setup` - Install Tailwind and esbuild
-- `mix assets.build` - Compile assets (runs Tailwind and esbuild)
+- `mix assets.setup` - Install esbuild
+- `mix assets.build` - Compile assets (runs esbuild)
 - `mix assets.deploy` - Build minified assets for production
 
 ### Quality Checks
@@ -196,12 +196,11 @@ Organize business logic into contexts:
 **Task List Display:**
 - Show task list title prominently at top
 - Display tasks in order with large checkboxes
-- Use Tailwind utilities for spacing and typography
 - Initially: simple text + checkbox layout
 - Future: task icons/images displayed alongside text
 
 **Interactive Elements:**
-- Large, touch-friendly checkboxes (use Tailwind to size appropriately)
+- Large, touch-friendly checkboxes
 - Provide immediate visual feedback on check/uncheck
 - Future: play sound effect on task completion
 - Future: celebration animation/sound when all tasks complete
