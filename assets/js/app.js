@@ -25,11 +25,27 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/adhdo"
 import topbar from "../vendor/topbar"
 
+// Client storage hook for persisting client name
+const ClientStorage = {
+  mounted() {
+    const clientName = localStorage.getItem("adhdo_client_name")
+    if (clientName) {
+      this.pushEvent("client_name_loaded", {name: clientName})
+    }
+  },
+  updated() {
+    const clientName = this.el.dataset.clientName
+    if (clientName) {
+      localStorage.setItem("adhdo_client_name", clientName)
+    }
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks},
+  hooks: {...colocatedHooks, ClientStorage},
 })
 
 // Show progress bar on live navigation and form submits

@@ -1,13 +1,39 @@
 defmodule AdhdoWeb.HomeLive do
   use AdhdoWeb, :live_view
 
-  alias Adhdo.Lists
+  alias Adhdo.{Lists, Clients}
 
   @impl true
   def mount(_params, _session, socket) do
-    task_lists = Lists.list_task_lists()
+    {:ok,
+     socket
+     |> assign(:client_name, nil)
+     |> assign(:show_registration, true)
+     |> assign(:task_lists, Lists.list_task_lists())}
+  end
 
-    {:ok, assign(socket, :task_lists, task_lists)}
+  @impl true
+  def handle_event("client_name_loaded", %{"name" => name}, socket) do
+    # Client name found in localStorage, redirect to client page
+    {:noreply, push_navigate(socket, to: ~p"/clients/#{name}")}
+  end
+
+  @impl true
+  def handle_event("register_client", %{"client_name" => name}, socket) do
+    name = String.trim(name)
+
+    if name != "" do
+      # Create or get the client
+      {:ok, _client} = Clients.get_or_create_client(name)
+
+      # Store in socket and redirect
+      {:noreply,
+       socket
+       |> assign(:client_name, name)
+       |> push_navigate(to: ~p"/clients/#{name}")}
+    else
+      {:noreply, socket}
+    end
   end
 
   @impl true
@@ -28,90 +54,100 @@ defmodule AdhdoWeb.HomeLive do
         width: 100vw;
         background: linear-gradient(135deg, #e0f2fe 0%, #ddd6fe 100%);
         padding: 4vh 4vw;
-      }
-
-      .header {
-        text-align: center;
-        margin-bottom: 6vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
       }
 
       .title {
-        font-size: 10vh;
+        font-size: 12vh;
         font-weight: bold;
         color: #1f2937;
-        margin: 0 0 2vh 0;
+        margin: 0 0 4vh 0;
+        text-align: center;
       }
 
       .subtitle {
         font-size: 4vh;
         color: #6b7280;
-        margin: 0;
+        margin: 0 0 6vh 0;
+        text-align: center;
       }
 
-      .lists-grid {
-        max-width: 1200px;
-        margin: 0 auto;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 3vh;
-      }
-
-      .list-card {
+      .registration-card {
         background: white;
-        border-radius: 1.5rem;
-        padding: 4vh 3vw;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        border: 4px solid transparent;
-        transition: all 0.2s;
-        text-decoration: none;
-        color: inherit;
+        border-radius: 2rem;
+        padding: 6vh 6vw;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        max-width: 600px;
+        width: 100%;
+      }
+
+      .form-label {
+        font-size: 3vh;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 2vh;
         display: block;
       }
 
-      .list-card:hover {
-        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
-        transform: translateY(-4px);
-        border-color: #93c5fd;
+      .form-input {
+        width: 100%;
+        font-size: 4vh;
+        padding: 2vh;
+        border: 3px solid #d1d5db;
+        border-radius: 1rem;
+        outline: none;
+        transition: border-color 0.2s;
       }
 
-      .list-card:active {
-        transform: translateY(-2px);
+      .form-input:focus {
+        border-color: #3b82f6;
       }
 
-      .list-name {
-        font-size: 5vh;
+      .form-button {
+        width: 100%;
+        font-size: 4vh;
         font-weight: bold;
-        color: #1f2937;
-        margin: 0 0 2vh 0;
+        padding: 2.5vh;
+        margin-top: 3vh;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 1rem;
+        cursor: pointer;
+        transition: background 0.2s;
       }
 
-      .list-description {
-        font-size: 3vh;
-        color: #6b7280;
-        margin: 0 0 2vh 0;
+      .form-button:hover {
+        background: #2563eb;
       }
 
-      .list-meta {
-        font-size: 2.5vh;
-        color: #9ca3af;
-        margin: 0;
+      .form-button:active {
+        transform: scale(0.98);
       }
     </style>
 
-    <div class="container">
-      <div class="header">
-        <h1 class="title">Adhdo</h1>
-        <p class="subtitle">Choose a task list</p>
-      </div>
+    <div class="container" phx-hook="ClientStorage" id="client-storage-hook" data-client-name={@client_name}>
+      <h1 class="title">Adhdo</h1>
 
-      <div class="lists-grid">
-        <a :for={list <- @task_lists} href={~p"/lists/#{list.id}"} class="list-card">
-          <h2 class="list-name">{list.name}</h2>
-          <p :if={list.description} class="list-description">{list.description}</p>
-          <p class="list-meta">
-            {length(list.tasks)} {if length(list.tasks) == 1, do: "task", else: "tasks"}
-          </p>
-        </a>
+      <div :if={@show_registration} class="registration-card">
+        <form phx-submit="register_client">
+          <label for="client-name-input" class="form-label">What's your name?</label>
+          <input
+            type="text"
+            id="client-name-input"
+            name="client_name"
+            class="form-input"
+            placeholder="Enter your name"
+            autofocus
+            autocomplete="off"
+          />
+          <button type="submit" class="form-button">
+            Get Started
+          </button>
+        </form>
       </div>
     </div>
     """

@@ -4,12 +4,19 @@ defmodule Adhdo.Sessions do
 
   Each active list gets its own GenServer process that tracks which tasks are completed.
   State is ephemeral and broadcasts changes via PubSub.
+
+  Also tracks which clients are currently viewing which lists (ephemeral, in-memory).
   """
 
   alias Adhdo.Sessions.{ListSession, Supervisor}
   alias Phoenix.PubSub
 
   @pubsub Adhdo.PubSub
+  @client_registry_name __MODULE__.ClientRegistry
+
+  def start_link(_opts) do
+    Agent.start_link(fn -> %{} end, name: @client_registry_name)
+  end
 
   @doc """
   Starts a new session for a task list.
@@ -84,5 +91,55 @@ defmodule Adhdo.Sessions do
   """
   def unsubscribe(list_id) do
     PubSub.unsubscribe(@pubsub, topic(list_id))
+  end
+
+  ## Client Registry functions
+
+  @doc """
+  Activates a list for specific clients.
+  This sets which list each client should display.
+  """
+  def activate_list_for_clients(list_id, client_names) when is_list(client_names) do
+    # Ensure the list session exists
+    start_session(list_id)
+
+    # Update client registry
+    Agent.update(@client_registry_name, fn state ->
+      Enum.reduce(client_names, state, fn client_name, acc ->
+        Map.put(acc, client_name, list_id)
+      end)
+    end)
+
+    :ok
+  end
+
+  @doc """
+  Gets the active list ID for a client.
+  Returns nil if no list is active for this client.
+  """
+  def get_active_list_for_client(client_name) do
+    Agent.get(@client_registry_name, fn state ->
+      Map.get(state, client_name)
+    end)
+  end
+
+  @doc """
+  Deactivates the list for a client.
+  """
+  def deactivate_client(client_name) do
+    Agent.update(@client_registry_name, fn state ->
+      Map.delete(state, client_name)
+    end)
+  end
+
+  @doc """
+  Gets all clients viewing a specific list.
+  """
+  def get_clients_for_list(list_id) do
+    Agent.get(@client_registry_name, fn state ->
+      state
+      |> Enum.filter(fn {_client, lid} -> lid == list_id end)
+      |> Enum.map(fn {client, _} -> client end)
+    end)
   end
 end

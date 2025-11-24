@@ -14,6 +14,10 @@ defmodule Adhdo.Application do
       {Phoenix.PubSub, name: Adhdo.PubSub},
       {Registry, keys: :unique, name: Adhdo.Sessions.Registry},
       Adhdo.Sessions.Supervisor,
+      %{
+        id: Adhdo.Sessions,
+        start: {Adhdo.Sessions, :start_link, [[]]}
+      },
       # Start a worker by calling: Adhdo.Worker.start_link(arg)
       # {Adhdo.Worker, arg},
       # Start to serve requests, typically the last entry

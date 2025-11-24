@@ -18,6 +18,7 @@ defmodule AdhdoWeb.Router do
     pipe_through :browser
 
     live "/", HomeLive
+    live "/clients/:name", ClientLive
     live "/lists/:id", TaskListLive
   end
 
