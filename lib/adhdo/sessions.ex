@@ -16,7 +16,7 @@ defmodule Adhdo.Sessions do
 
   def start_link(_opts) do
     Agent.start_link(
-      fn -> %{default_list: 1, clients: %{}} end,
+      fn -> %{default_list: 7, clients: %{}} end,
       name: @client_registry_name
     )
   end

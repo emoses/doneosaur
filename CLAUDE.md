@@ -263,3 +263,5 @@ All guidelines from AGENTS.md apply. Key reminders:
 - Use `cond` for multiple conditions, not `else if` (which doesn't exist in Elixir)
 - Avoid LiveComponents unless specifically needed
 - Give forms and key elements unique DOM IDs for testing (e.g., `id="user-form"`)
+- CSS belongs in CSS files.  Use CSS variables or occasionally inline styles, but don't put CSS style blocks inline in HEEX or other
+  live-rendered templates

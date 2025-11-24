@@ -23,15 +23,25 @@ Adhdo.Repo.delete_all(Adhdo.Lists.TaskList)
     description: "Get ready for school!",
     tasks: [
       %{text: "Wake up and get out of bed"},
-      %{text: "Use the bathroom"},
       %{text: "Brush teeth"},
       %{text: "Get dressed"},
-      %{text: "Make bed"},
       %{text: "Eat breakfast"},
       %{text: "Clean up breakfast dishes"},
-      %{text: "Pack backpack"},
-      %{text: "Put on shoes"},
-      %{text: "Grab lunch"}
+      %{text: "Feed the Cat"},
+    ]
+  })
+
+# Out the door
+{:ok, _out_the_door} =
+  Lists.create_task_list_with_tasks(%{
+    name: "Out the Door",
+    description: "Do you have...",
+    tasks: [
+      %{text: "Chewie"},
+      %{text: "iPad"},
+      %{text: "Lunch"},
+      %{text: "Water Bottle"},
+      %{text: "Backpack"},
     ]
   })
 

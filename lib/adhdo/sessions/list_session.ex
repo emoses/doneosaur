@@ -77,7 +77,7 @@ defmodule Adhdo.Sessions.ListSession do
 
     new_state = %{state | completed_tasks: new_completed}
 
-    PubSub.broadcast(@pubsub, topic(state.list_id), {:task_toggled, task_id, completed?})
+    PubSub.broadcast(@pubsub, topic(state.list_id), {:updated, {:toggled, task_id, completed?}})
 
     {:reply, {:ok, completed?}, new_state}
   end
@@ -91,7 +91,7 @@ defmodule Adhdo.Sessions.ListSession do
   @impl true
   def handle_call(:reset, _from, state) do
     new_state = %{state | completed_tasks: MapSet.new()}
-    PubSub.broadcast(@pubsub, topic(state.list_id), :session_reset)
+    PubSub.broadcast(@pubsub, topic(state.list_id), {:updated, {:session_reset}})
     {:reply, :ok, new_state}
   end
 

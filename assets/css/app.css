@@ -113,7 +113,7 @@ body {
   align-items: center;
 }
 
-.task-label.completed {
+.completed .task-label {
   text-decoration: line-through;
   color: #9ca3af;
 }

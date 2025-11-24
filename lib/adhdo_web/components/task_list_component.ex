@@ -48,19 +48,10 @@ defmodule AdhdoWeb.TaskListComponent do
     {:noreply, socket}
   end
 
-  def handle_info({:task_toggled, task_id, completed?}, socket) do
-    completed_tasks =
-      if completed? do
-        MapSet.put(socket.assigns.completed_tasks, task_id)
-      else
-        MapSet.delete(socket.assigns.completed_tasks, task_id)
-      end
+  def handle_info({:updated, _}, socket) do
+    completed_tasks = Sessions.get_completed_tasks(socket.assigns.list_id)
 
     {:noreply, assign(socket, :completed_tasks, completed_tasks)}
-  end
-
-  def handle_info(:session_reset, socket) do
-    {:noreply, assign(socket, :completed_tasks, MapSet.new())}
   end
 
   @impl true
@@ -102,6 +93,9 @@ defmodule AdhdoWeb.TaskListComponent do
         <div
           :for={task <- @task_list.tasks}
           class={"task-item #{if MapSet.member?(@completed_tasks, task.id), do: "completed", else: ""}"}
+          phx-click="toggle_task"
+          phx-value-task-id={task.id}
+          phx-target={@myself}
         >
           <input
             type="checkbox"
@@ -114,7 +108,7 @@ defmodule AdhdoWeb.TaskListComponent do
           />
           <label
             for={"task-#{task.id}"}
-            class={"task-label #{if MapSet.member?(@completed_tasks, task.id), do: "completed", else: ""}"}
+            class="task-label"
           >
             {task.text}
           </label>
