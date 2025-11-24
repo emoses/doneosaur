@@ -15,7 +15,10 @@ defmodule Adhdo.Sessions do
   @client_registry_name __MODULE__.ClientRegistry
 
   def start_link(_opts) do
-    Agent.start_link(fn -> %{} end, name: @client_registry_name)
+    Agent.start_link(
+      fn -> %{default_list: 1, clients: %{}} end,
+      name: @client_registry_name
+    )
   end
 
   @doc """
@@ -105,9 +108,12 @@ defmodule Adhdo.Sessions do
 
     # Update client registry
     Agent.update(@client_registry_name, fn state ->
-      Enum.reduce(client_names, state, fn client_name, acc ->
-        Map.put(acc, client_name, list_id)
-      end)
+      updated_clients =
+        Enum.reduce(client_names, state.clients, fn client_name, acc ->
+          Map.put(acc, client_name, list_id)
+        end)
+
+      %{state | clients: updated_clients}
     end)
 
     :ok
@@ -115,20 +121,21 @@ defmodule Adhdo.Sessions do
 
   @doc """
   Gets the active list ID for a client.
-  Returns nil if no list is active for this client.
+  Returns the default list if no list is active for this client.
   """
   def get_active_list_for_client(client_name) do
     Agent.get(@client_registry_name, fn state ->
-      Map.get(state, client_name)
+      Map.get(state.clients, client_name, state.default_list)
     end)
   end
 
   @doc """
   Deactivates the list for a client.
+  After deactivation, the client will use the default list.
   """
   def deactivate_client(client_name) do
     Agent.update(@client_registry_name, fn state ->
-      Map.delete(state, client_name)
+      %{state | clients: Map.delete(state.clients, client_name)}
     end)
   end
 
@@ -137,9 +144,27 @@ defmodule Adhdo.Sessions do
   """
   def get_clients_for_list(list_id) do
     Agent.get(@client_registry_name, fn state ->
-      state
+      state.clients
       |> Enum.filter(fn {_client, lid} -> lid == list_id end)
       |> Enum.map(fn {client, _} -> client end)
+    end)
+  end
+
+  @doc """
+  Gets the default list ID.
+  This is the list that clients see when they don't have an active list assigned.
+  """
+  def get_default_list do
+    Agent.get(@client_registry_name, fn state -> state.default_list end)
+  end
+
+  @doc """
+  Sets the default list ID.
+  This will be used for any clients that don't have a specific list assigned.
+  """
+  def set_default_list(list_id) do
+    Agent.update(@client_registry_name, fn state ->
+      %{state | default_list: list_id}
     end)
   end
 end
