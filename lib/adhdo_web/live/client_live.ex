@@ -9,6 +9,11 @@ defmodule AdhdoWeb.ClientLive do
     # Ensure client exists
     {:ok, _client} = Clients.get_or_create_client(client_name)
 
+    # Subscribe to current list changes
+    if connected?(socket) do
+      Phoenix.PubSub.subscribe(Adhdo.PubSub, "current_list")
+    end
+
     # Get active list for this client (will return default list if none assigned)
     list_id = Sessions.get_current_list()
 
@@ -38,6 +43,19 @@ defmodule AdhdoWeb.ClientLive do
   @impl true
   def handle_info({:reload}, socket) do
     TaskListHelpers.handle_reload(socket)
+  end
+
+  @impl true
+  def handle_info({:current_list_changed, new_list_id}, socket) do
+    # Unsubscribe from old list updates if we have an active list
+    if socket.assigns[:task_list] do
+      Sessions.unsubscribe(socket.assigns.task_list.id)
+    end
+
+    # Switch to the new list
+    socket = TaskListHelpers.init_task_list(socket, new_list_id)
+
+    {:noreply, socket}
   end
 
   @impl true

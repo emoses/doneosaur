@@ -60,15 +60,16 @@ defmodule AdhdoWeb.TaskListHelpers do
   end
 
   def handle_reload(socket) do
-    socket = case Lists.get_task_list!(socket.assigns.task_list.id) do
-      nil ->
-        socket
-        |> assign(:task_list, nil)
+    socket =
+      case Lists.get_task_list!(socket.assigns.task_list.id) do
+        nil ->
+          socket
+          |> assign(:task_list, nil)
 
-      task_list ->
-        socket
-        |> assign(:task_list, task_list)
-    end
+        task_list ->
+          socket
+          |> assign(:task_list, task_list)
+      end
 
     {:noreply, socket}
   end

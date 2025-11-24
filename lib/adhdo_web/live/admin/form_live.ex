@@ -124,6 +124,7 @@ defmodule AdhdoWeb.Admin.FormLive do
     case Lists.create_task_list_with_tasks(attrs) do
       {:ok, task_list} ->
         Sessions.reset_session(task_list.id)
+
         {:noreply,
          socket
          |> put_flash(:info, "Task list created successfully")
@@ -141,6 +142,7 @@ defmodule AdhdoWeb.Admin.FormLive do
     case Lists.update_task_list_and_tasks(task_list, task_list_params, socket.assigns.tasks) do
       {:ok, _updated_list} ->
         Sessions.reload_list(task_list.id)
+
         {:noreply,
          socket
          |> put_flash(:info, "Task list updated successfully")

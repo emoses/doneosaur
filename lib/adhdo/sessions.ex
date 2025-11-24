@@ -129,19 +129,22 @@ defmodule Adhdo.Sessions do
 
   @doc """
   Gets the current list ID.
-  This is the list that clients see when they don't have an active list assigned.
   """
   def get_current_list do
     Agent.get(@client_registry_name, fn state -> state.current_list end)
   end
 
   @doc """
-  Sets the current list ID.
-  This will be used for any clients that don't have a specific list assigned.
+  Sets the current list ID and broadcasts to all clients.
   """
   def set_current_list(list_id) do
     Agent.update(@client_registry_name, fn state ->
       %{state | current_list: list_id}
     end)
+
+    # Broadcast to all clients that the current list changed
+    PubSub.broadcast(@pubsub, "current_list", {:current_list_changed, list_id})
+
+    :ok
   end
 end
