@@ -10,7 +10,7 @@ defmodule AdhdoWeb.ClientLive do
     {:ok, _client} = Clients.get_or_create_client(client_name)
 
     # Get active list for this client (will return default list if none assigned)
-    list_id = Sessions.get_active_list_for_client(client_name)
+    list_id = Sessions.get_current_list()
 
     socket =
       socket
@@ -23,6 +23,11 @@ defmodule AdhdoWeb.ClientLive do
   @impl true
   def handle_event("toggle_task", params, socket) do
     TaskListHelpers.handle_toggle_task(params, socket)
+  end
+
+  @impl true
+  def handle_event("reset_list", params, socket) do
+    TaskListHelpers.handle_reset(params, socket)
   end
 
   @impl true

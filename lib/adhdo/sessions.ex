@@ -10,15 +10,37 @@ defmodule Adhdo.Sessions do
 
   alias Adhdo.Sessions.{ListSession, Supervisor}
   alias Phoenix.PubSub
+  alias Adhdo.Lists
 
   @pubsub Adhdo.PubSub
   @client_registry_name __MODULE__.ClientRegistry
+  @default_list_name "Morning Routine"
 
   def start_link(_opts) do
+    default_list_id = determine_default_list()
+
     Agent.start_link(
-      fn -> %{default_list: 7, clients: %{}} end,
+      fn -> %{current_list: default_list_id, clients: %{}} end,
       name: @client_registry_name
     )
+  end
+
+  @doc """
+  Determines which list should be the default at startup.
+  Returns the ID of the "Morning Routine" list if it exists,
+  otherwise returns the first available list, or nil if no lists exist.
+  """
+  def determine_default_list do
+    case Lists.get_task_list_by_name(@default_list_name) do
+      nil ->
+        case Lists.list_task_lists() do
+          [] -> nil
+          [first_list | _] -> first_list.id
+        end
+
+      task_list ->
+        task_list.id
+    end
   end
 
   @doc """
@@ -99,72 +121,20 @@ defmodule Adhdo.Sessions do
   ## Client Registry functions
 
   @doc """
-  Activates a list for specific clients.
-  This sets which list each client should display.
-  """
-  def activate_list_for_clients(list_id, client_names) when is_list(client_names) do
-    # Ensure the list session exists
-    start_session(list_id)
-
-    # Update client registry
-    Agent.update(@client_registry_name, fn state ->
-      updated_clients =
-        Enum.reduce(client_names, state.clients, fn client_name, acc ->
-          Map.put(acc, client_name, list_id)
-        end)
-
-      %{state | clients: updated_clients}
-    end)
-
-    :ok
-  end
-
-  @doc """
-  Gets the active list ID for a client.
-  Returns the default list if no list is active for this client.
-  """
-  def get_active_list_for_client(client_name) do
-    Agent.get(@client_registry_name, fn state ->
-      Map.get(state.clients, client_name, state.default_list)
-    end)
-  end
-
-  @doc """
-  Deactivates the list for a client.
-  After deactivation, the client will use the default list.
-  """
-  def deactivate_client(client_name) do
-    Agent.update(@client_registry_name, fn state ->
-      %{state | clients: Map.delete(state.clients, client_name)}
-    end)
-  end
-
-  @doc """
-  Gets all clients viewing a specific list.
-  """
-  def get_clients_for_list(list_id) do
-    Agent.get(@client_registry_name, fn state ->
-      state.clients
-      |> Enum.filter(fn {_client, lid} -> lid == list_id end)
-      |> Enum.map(fn {client, _} -> client end)
-    end)
-  end
-
-  @doc """
-  Gets the default list ID.
+  Gets the current list ID.
   This is the list that clients see when they don't have an active list assigned.
   """
-  def get_default_list do
-    Agent.get(@client_registry_name, fn state -> state.default_list end)
+  def get_current_list do
+    Agent.get(@client_registry_name, fn state -> state.current_list end)
   end
 
   @doc """
-  Sets the default list ID.
+  Sets the current list ID.
   This will be used for any clients that don't have a specific list assigned.
   """
-  def set_default_list(list_id) do
+  def set_current_list(list_id) do
     Agent.update(@client_registry_name, fn state ->
-      %{state | default_list: list_id}
+      %{state | current_list: list_id}
     end)
   end
 end
