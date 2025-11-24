@@ -145,6 +145,11 @@ defmodule Adhdo.Sessions do
     # Broadcast to all clients that the current list changed
     PubSub.broadcast(@pubsub, "current_list", {:current_list_changed, list_id})
 
+    # Reset the target list if it has a session
+    if session_exists?(list_id) do
+      ListSession.reset(list_id)
+    end
+
     :ok
   end
 end

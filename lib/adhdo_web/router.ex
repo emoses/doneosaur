@@ -30,10 +30,12 @@ defmodule AdhdoWeb.Router do
     live "/lists/:id/edit", FormLive, :edit
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", AdhdoWeb do
-  #   pipe_through :api
-  # end
+  # API routes
+  scope "/api", AdhdoWeb do
+    pipe_through :api
+
+    post "/lists/activate", ListController, :activate
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:adhdo, :dev_routes) do
