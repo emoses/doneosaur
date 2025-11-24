@@ -48,12 +48,6 @@ defmodule AdhdoWeb.TaskListComponent do
     {:noreply, socket}
   end
 
-  def handle_info({:updated, _}, socket) do
-    completed_tasks = Sessions.get_completed_tasks(socket.assigns.list_id)
-
-    {:noreply, assign(socket, :completed_tasks, completed_tasks)}
-  end
-
   @impl true
   def render(assigns) do
     if assigns[:task_list] do
@@ -101,9 +95,6 @@ defmodule AdhdoWeb.TaskListComponent do
             type="checkbox"
             id={"task-#{task.id}"}
             checked={MapSet.member?(@completed_tasks, task.id)}
-            phx-click="toggle_task"
-            phx-value-task-id={task.id}
-            phx-target={@myself}
             class="task-checkbox"
           />
           <label

@@ -36,9 +36,22 @@ body {
   overflow: hidden;
 }
 
-.header {
-  text-align: center;
+header {
   margin-bottom: 2vh;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+}
+
+header .content {
+    text-align: center;
+    grid-column: 2;
+}
+
+header .controls {
+    margin-left: auto;
+    grid-column: 3;
+    justify-self: end;
 }
 
 .title {

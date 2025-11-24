@@ -27,7 +27,7 @@ Adhdo.Repo.delete_all(Adhdo.Lists.TaskList)
       %{text: "Get dressed"},
       %{text: "Eat breakfast"},
       %{text: "Clean up breakfast dishes"},
-      %{text: "Feed the Cat"},
+      %{text: "Feed the Cat"}
     ]
   })
 
@@ -41,7 +41,7 @@ Adhdo.Repo.delete_all(Adhdo.Lists.TaskList)
       %{text: "iPad"},
       %{text: "Lunch"},
       %{text: "Water Bottle"},
-      %{text: "Backpack"},
+      %{text: "Backpack"}
     ]
   })
 
