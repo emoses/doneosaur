@@ -108,6 +108,29 @@ header .controls {
   border-radius: 0.5rem;
   cursor: pointer;
   accent-color: #22c55e;
+  position: relative;
+}
+
+.task-checkbox.has-image {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.task-checkbox.has-image:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: calc(var(--task-height) * 0.5 * 1vh);
+  color: white;
+  font-weight: bold;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.8),
+               0 0 5px rgba(0, 0, 0, 0.5);
 }
 
 .task-checkbox:focus {
@@ -333,6 +356,38 @@ header .controls {
   background: #f9fafb;
   border-radius: 0.375rem;
   margin-bottom: 0.5rem;
+  transition: background 0.2s;
+}
+
+.task-list-item.dragging {
+  opacity: 0.5;
+  background: #e5e7eb;
+}
+
+.task-list-item.drag-over-top::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #3b82f6;
+  border-radius: 2px;
+}
+
+.task-list-item.drag-over-bottom::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #3b82f6;
+  border-radius: 2px;
+}
+
+.task-list-item {
+  position: relative;
 }
 
 .task-list-item-text {
@@ -348,6 +403,8 @@ header .controls {
   cursor: grab;
   color: #9ca3af;
   padding: 0.25rem;
+  font-size: 1.5rem;
+  user-select: none;
 }
 
 .drag-handle:active {

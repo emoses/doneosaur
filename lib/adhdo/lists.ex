@@ -170,6 +170,7 @@ defmodule Adhdo.Lists do
           |> Enum.each(fn {task_data, order} ->
             create_task(%{
               text: task_data.text,
+              image_url: Map.get(task_data, :image_url),
               order: order,
               task_list_id: updated_list.id
             })

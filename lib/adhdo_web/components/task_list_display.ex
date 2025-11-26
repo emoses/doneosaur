@@ -48,7 +48,8 @@ defmodule AdhdoWeb.TaskListDisplay do
             type="checkbox"
             id={"task-#{task.id}"}
             checked={MapSet.member?(@completed_tasks, task.id)}
-            class="task-checkbox"
+            class={"task-checkbox #{if task.image_url, do: "has-image", else: ""}"}
+            style={if task.image_url, do: "background-image: url(#{task.image_url})", else: ""}
           />
           <label for={"task-#{task.id}"} class="task-label">
             {task.text}

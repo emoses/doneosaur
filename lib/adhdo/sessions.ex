@@ -96,14 +96,18 @@ defmodule Adhdo.Sessions do
   Resets a task list session, clearing all completed tasks.
   """
   def reset_session(list_id) do
-    ListSession.reset(list_id)
+    if session_exists?(list_id) do
+      ListSession.reset(list_id)
+    end
   end
 
   @doc """
   Resets a task list and asks clients to reload its data
   """
   def reload_list(list_id) do
-    ListSession.reload(list_id)
+    if session_exists?(list_id) do
+      ListSession.reload(list_id)
+    end
   end
 
   @doc """

@@ -53,7 +53,7 @@ defmodule AdhdoWeb.Admin.FormLive do
     new_task = %{
       id: "new_#{System.unique_integer([:positive])}",
       text: "",
-      order: length(socket.assigns.tasks) + 1,
+      image_url: nil,
       temp_id: true
     }
 
@@ -64,8 +64,6 @@ defmodule AdhdoWeb.Admin.FormLive do
   def handle_event("remove_task", %{"index" => index}, socket) do
     index = String.to_integer(index)
     tasks = List.delete_at(socket.assigns.tasks, index)
-    # Renumber tasks
-    tasks = Enum.with_index(tasks, 1) |> Enum.map(fn {task, order} -> %{task | order: order} end)
 
     {:noreply, assign(socket, :tasks, tasks)}
   end
@@ -74,6 +72,17 @@ defmodule AdhdoWeb.Admin.FormLive do
   def handle_event("update_task_text", %{"index" => index, "value" => value}, socket) do
     index = String.to_integer(index)
     tasks = List.update_at(socket.assigns.tasks, index, fn task -> %{task | text: value} end)
+
+    {:noreply, assign(socket, :tasks, tasks)}
+  end
+
+  @impl true
+  def handle_event("update_task_image", %{"index" => index, "value" => value}, socket) do
+    index = String.to_integer(index)
+    image_url = if value == "", do: nil, else: value
+
+    tasks =
+      List.update_at(socket.assigns.tasks, index, fn task -> %{task | image_url: image_url} end)
 
     {:noreply, assign(socket, :tasks, tasks)}
   end
@@ -103,13 +112,33 @@ defmodule AdhdoWeb.Admin.FormLive do
     end
   end
 
+  @impl true
+  def handle_event("reorder_task", %{"from" => from_index, "to" => to_gap}, socket) do
+    insert_pos = if from_index < to_gap, do: to_gap - 1, else: to_gap
+
+    if from_index == insert_pos do
+      {:noreply, socket}
+    else
+      tasks = socket.assigns.tasks
+      {item, tasks} = List.pop_at(tasks, from_index)
+
+      # to_gap is the target gap index (0 to n, where n is number of items)
+      # After removing the item, we need to adjust the insertion position
+      # If from_index < to_gap, the gap shifts down by 1 after removal
+
+      tasks = List.insert_at(tasks, insert_pos, item)
+
+      {:noreply, assign(socket, :tasks, tasks)}
+    end
+  end
+
   defp swap_tasks(tasks, index_a, index_b) do
     task_a = Enum.at(tasks, index_a)
     task_b = Enum.at(tasks, index_b)
 
     tasks
-    |> List.replace_at(index_a, %{task_b | order: task_a.order})
-    |> List.replace_at(index_b, %{task_a | order: task_b.order})
+    |> List.replace_at(index_a, task_b)
+    |> List.replace_at(index_b, task_a)
   end
 
   defp save_task_list(socket, :new, task_list_params) do
@@ -117,13 +146,17 @@ defmodule AdhdoWeb.Admin.FormLive do
     task_attrs =
       socket.assigns.tasks
       |> Enum.filter(fn task -> task.text && String.trim(task.text) != "" end)
-      |> Enum.map(fn task -> %{text: task.text, order: task.order} end)
+      |> Enum.map(fn task ->
+        %{text: task.text, image_url: task.image_url}
+      end)
 
-    attrs = Map.put(task_list_params, "tasks", task_attrs)
+    attrs = Map.put(task_list_params, :tasks, task_attrs)
 
     case Lists.create_task_list_with_tasks(attrs) do
       {:ok, task_list} ->
-        Sessions.reset_session(task_list.id)
+        if Sessions.session_exists?(task_list.id) do
+            Sessions.reset_session(task_list.id)
+        end
 
         {:noreply,
          socket
@@ -177,7 +210,7 @@ defmodule AdhdoWeb.Admin.FormLive do
             type="text"
             name="task_list[name]"
             id="task_list_name"
-            value={@changeset.data.name}
+            value={Ecto.Changeset.get_field(@changeset, :name)}
             class="form-input"
             required
           />
@@ -189,7 +222,7 @@ defmodule AdhdoWeb.Admin.FormLive do
             name="task_list[description]"
             id="task_list_description"
             class="form-textarea"
-          >{@changeset.data.description}</textarea>
+          >{Ecto.Changeset.get_field(@changeset, :description)}</textarea>
         </div>
 
         <div class="form-group">
@@ -203,20 +236,33 @@ defmodule AdhdoWeb.Admin.FormLive do
           <%= if @tasks == [] do %>
             <p class="text-muted">No tasks yet. Click "Add Task" to create one.</p>
           <% else %>
-            <div>
+            <div id="task-list-container" phx-hook="DragDropTaskList">
               <div
                 :for={{task, index} <- Enum.with_index(@tasks)}
                 class="task-list-item"
-                id={"task-#{index}"}
+                id={"task-#{task.id}"}
+                data-index={index}
               >
+                <div class="drag-handle" title="Drag to reorder">⋮⋮</div>
                 <div class="task-list-item-text">
                   <input
                     type="text"
+                    id={"task-text-#{task.id}"}
                     value={task.text}
                     phx-blur="update_task_text"
                     phx-value-index={index}
                     class="form-input"
                     placeholder="Task description"
+                    style="margin-bottom: 0.5rem;"
+                  />
+                  <input
+                    type="text"
+                    id={"task-image-#{task.id}"}
+                    value={task.image_url || ""}
+                    phx-blur="update_task_image"
+                    phx-value-index={index}
+                    class="form-input"
+                    placeholder="Image URL (optional)"
                   />
                 </div>
                 <div class="task-list-item-actions">
