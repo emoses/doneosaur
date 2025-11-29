@@ -7,7 +7,15 @@ defmodule AdhdoWeb.Admin.FormLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    {:ok,
+     socket
+     |> assign(:images, Lists.list_images())
+     |> assign(:selected_task_index, nil)
+     |> allow_upload(:image,
+       accept: ~w(.png .jpg .jpeg .gif .webp),
+       max_entries: 1,
+       max_file_size: 5_000_000
+     )}
   end
 
   @impl true
@@ -53,7 +61,7 @@ defmodule AdhdoWeb.Admin.FormLive do
     new_task = %{
       id: "new_#{System.unique_integer([:positive])}",
       text: "",
-      image_url: nil,
+      image_id: nil,
       temp_id: true
     }
 
@@ -72,17 +80,6 @@ defmodule AdhdoWeb.Admin.FormLive do
   def handle_event("update_task_text", %{"index" => index, "value" => value}, socket) do
     index = String.to_integer(index)
     tasks = List.update_at(socket.assigns.tasks, index, fn task -> %{task | text: value} end)
-
-    {:noreply, assign(socket, :tasks, tasks)}
-  end
-
-  @impl true
-  def handle_event("update_task_image", %{"index" => index, "value" => value}, socket) do
-    index = String.to_integer(index)
-    image_url = if value == "", do: nil, else: value
-
-    tasks =
-      List.update_at(socket.assigns.tasks, index, fn task -> %{task | image_url: image_url} end)
 
     {:noreply, assign(socket, :tasks, tasks)}
   end
@@ -132,6 +129,89 @@ defmodule AdhdoWeb.Admin.FormLive do
     end
   end
 
+  @impl true
+  def handle_event("open_image_picker", %{"index" => index}, socket) do
+    {:noreply, assign(socket, :selected_task_index, String.to_integer(index))}
+  end
+
+  @impl true
+  def handle_event("close_image_picker", _params, socket) do
+    {:noreply, assign(socket, :selected_task_index, nil)}
+  end
+
+  @impl true
+  def handle_event("prevent_close", _params, socket) do
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("select_existing_image", %{"uuid" => uuid}, socket) do
+    index = socket.assigns.selected_task_index
+
+    tasks =
+      List.update_at(socket.assigns.tasks, index, fn task ->
+        %{task | image_id: uuid}
+      end)
+
+    {:noreply,
+     socket
+     |> assign(:tasks, tasks)
+     |> assign(:selected_task_index, nil)}
+  end
+
+  @impl true
+  def handle_event("validate_upload", _params, socket) do
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("cancel_upload", %{"ref" => ref}, socket) do
+    {:noreply, cancel_upload(socket, :image, ref)}
+  end
+
+  @impl true
+  def handle_event("save_uploaded_image", %{"name" => name}, socket) do
+    index = socket.assigns.selected_task_index
+
+    uploaded_files =
+      consume_uploaded_entries(socket, :image, fn %{path: path}, entry ->
+        # Determine file type from entry
+        type =
+          entry.client_type
+          |> String.split("/")
+          |> List.last()
+          |> String.downcase()
+
+        # Create image record
+        {:ok, image} = Lists.create_image(%{name: name, type: type})
+
+        # Save file to disk
+        dest_dir = Application.get_env(:adhdo, :image_storage_path, "priv/static/images/tasks")
+        File.mkdir_p!(dest_dir)
+        dest = Path.join(dest_dir, "#{image.uuid}.#{type}")
+        File.cp!(path, dest)
+
+        {:ok, image.uuid}
+      end)
+
+    case uploaded_files do
+      [uuid | _] ->
+        tasks =
+          List.update_at(socket.assigns.tasks, index, fn task ->
+            %{task | image_id: uuid}
+          end)
+
+        {:noreply,
+         socket
+         |> assign(:tasks, tasks)
+         |> assign(:images, Lists.list_images())
+         |> assign(:selected_task_index, nil)}
+
+      [] ->
+        {:noreply, socket}
+    end
+  end
+
   defp swap_tasks(tasks, index_a, index_b) do
     task_a = Enum.at(tasks, index_a)
     task_b = Enum.at(tasks, index_b)
@@ -147,7 +227,7 @@ defmodule AdhdoWeb.Admin.FormLive do
       socket.assigns.tasks
       |> Enum.filter(fn task -> task.text && String.trim(task.text) != "" end)
       |> Enum.map(fn task ->
-        %{text: task.text, image_url: task.image_url}
+        %{text: task.text, image_id: Map.get(task, :image_id)}
       end)
 
     attrs = Map.put(task_list_params, :tasks, task_attrs)
@@ -155,7 +235,7 @@ defmodule AdhdoWeb.Admin.FormLive do
     case Lists.create_task_list_with_tasks(attrs) do
       {:ok, task_list} ->
         if Sessions.session_exists?(task_list.id) do
-            Sessions.reset_session(task_list.id)
+          Sessions.reset_session(task_list.id)
         end
 
         {:noreply,
@@ -255,15 +335,27 @@ defmodule AdhdoWeb.Admin.FormLive do
                     placeholder="Task description"
                     style="margin-bottom: 0.5rem;"
                   />
-                  <input
-                    type="text"
-                    id={"task-image-#{task.id}"}
-                    value={task.image_url || ""}
-                    phx-blur="update_task_image"
-                    phx-value-index={index}
-                    class="form-input"
-                    placeholder="Image URL (optional)"
-                  />
+                  <div class="image-picker-control">
+                    <%= if task.image_id do %>
+                      <% image = Enum.find(@images, fn img -> img.uuid == task.image_id end) %>
+                      <%= if image do %>
+                        <div class="selected-image">
+                          <img src={Lists.get_image_url(image)} alt={image.name} />
+                          <span>{image.name}</span>
+                        </div>
+                      <% else %>
+                        <span class="text-muted">Image ID: {task.image_id} (not found)</span>
+                      <% end %>
+                    <% end %>
+                    <button
+                      type="button"
+                      phx-click="open_image_picker"
+                      phx-value-index={index}
+                      class="btn btn-secondary"
+                    >
+                      {if task.image_id, do: "Change Image (#{task.image_id |> String.slice(0..7)})", else: "Add Image"}
+                    </button>
+                  </div>
                 </div>
                 <div class="task-list-item-actions">
                   <button
@@ -307,7 +399,90 @@ defmodule AdhdoWeb.Admin.FormLive do
           </.link>
         </div>
       </.form>
+
+      <%= if @selected_task_index != nil do %>
+        <div class="image-picker-modal" phx-click="close_image_picker">
+          <div class="image-picker-content" phx-click="prevent_close">
+            <div class="image-picker-header">
+              <h2>Select or Upload Image</h2>
+              <button type="button" phx-click="close_image_picker" class="btn-close">✕</button>
+            </div>
+
+            <div class="image-picker-body">
+              <div class="existing-images">
+                <h3>Existing Images</h3>
+                <div class="image-grid">
+                  <%= for image <- @images do %>
+                    <div
+                      class="image-grid-item"
+                      phx-click="select_existing_image"
+                      phx-value-uuid={image.uuid}
+                    >
+                      <img src={Lists.get_image_url(image)} alt={image.name} />
+                      <span>{image.name}</span>
+                    </div>
+                  <% end %>
+                  <%= if @images == [] do %>
+                    <p class="text-muted">No images yet. Upload one below.</p>
+                  <% end %>
+                </div>
+              </div>
+
+              <div class="upload-section">
+                <h3>Upload New Image</h3>
+                <form phx-submit="save_uploaded_image" phx-change="validate_upload">
+                  <div class="form-group">
+                    <label class="form-label">Image Name</label>
+                    <input
+                      type="text"
+                      name="name"
+                      class="form-input"
+                      placeholder="e.g., Brush Teeth"
+                      required
+                    />
+                  </div>
+
+                  <div class="upload-drop-zone" phx-drop-target={@uploads.image.ref}>
+                    <div :for={entry <- @uploads.image.entries} class="upload-entry">
+                      <figure>
+                        <.live_img_preview entry={entry} />
+                        <figcaption>{entry.client_name}</figcaption>
+                      </figure>
+                      <button
+                        type="button"
+                        phx-click="cancel_upload"
+                        phx-value-ref={entry.ref}
+                        class="btn btn-danger"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    <.live_file_input upload={@uploads.image} />
+                    <p>Click to select or drag and drop an image</p>
+                  </div>
+
+                  <%= for err <- upload_errors(@uploads.image) do %>
+                    <p class="form-error">{error_to_string(err)}</p>
+                  <% end %>
+
+                  <button
+                    type="submit"
+                    class="btn btn-primary"
+                    disabled={@uploads.image.entries == []}
+                  >
+                    Upload and Select
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
     </div>
     """
   end
+
+  defp error_to_string(:too_large), do: "File is too large (max 5MB)"
+  defp error_to_string(:not_accepted), do: "Invalid file type"
+  defp error_to_string(_), do: "Upload error"
 end

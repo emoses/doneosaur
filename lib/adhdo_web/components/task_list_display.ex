@@ -4,6 +4,8 @@ defmodule AdhdoWeb.TaskListDisplay do
   """
   use Phoenix.Component
 
+  alias Adhdo.Lists
+
   @doc """
   Renders a task list with dynamically sized tasks.
 
@@ -44,12 +46,13 @@ defmodule AdhdoWeb.TaskListDisplay do
           phx-click="toggle_task"
           phx-value-task-id={task.id}
         >
+          <% image_url = if task.image_id, do: Lists.get_image_url(task.image_id), else: nil %>
           <input
             type="checkbox"
             id={"task-#{task.id}"}
             checked={MapSet.member?(@completed_tasks, task.id)}
-            class={"task-checkbox #{if task.image_url, do: "has-image", else: ""}"}
-            style={if task.image_url, do: "background-image: url(#{task.image_url})", else: ""}
+            class={"task-checkbox #{if image_url, do: "has-image", else: ""}"}
+            style={if image_url, do: "background-image: url(#{image_url})", else: ""}
           />
           <label for={"task-#{task.id}"} class="task-label">
             {task.text}

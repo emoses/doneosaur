@@ -40,3 +40,4 @@ npm-debug.log
 *.db-shm
 *.db-wal
 
+/priv/static/images/tasks/

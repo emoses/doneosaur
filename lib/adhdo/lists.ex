@@ -4,7 +4,7 @@ defmodule Adhdo.Lists do
   """
 
   alias Adhdo.Repo
-  alias Adhdo.Lists.{TaskList, Task}
+  alias Adhdo.Lists.{TaskList, Task, Image}
 
   ## TaskList functions
 
@@ -170,7 +170,7 @@ defmodule Adhdo.Lists do
           |> Enum.each(fn {task_data, order} ->
             create_task(%{
               text: task_data.text,
-              image_url: Map.get(task_data, :image_url),
+              image_id: Map.get(task_data, :image_id),
               order: order,
               task_list_id: updated_list.id
             })
@@ -182,5 +182,52 @@ defmodule Adhdo.Lists do
           Repo.rollback(changeset)
       end
     end)
+  end
+
+  ## Image functions
+
+  @doc """
+  Returns the list of all images.
+  """
+  def list_images do
+    Image
+    |> Repo.all()
+    |> Enum.sort_by(& &1.name)
+  end
+
+  @doc """
+  Gets a single image by UUID.
+  """
+  def get_image!(uuid) do
+    Repo.get!(Image, uuid)
+  end
+
+  @doc """
+  Creates an image.
+  """
+  def create_image(attrs \\ %{}) do
+    %Image{}
+    |> Image.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Deletes an image.
+  """
+  def delete_image(%Image{} = image) do
+    Repo.delete(image)
+  end
+
+  @doc """
+  Returns the URL path for an image based on its UUID and type.
+  Uses the configured image path from application config.
+  """
+  def get_image_url(%Image{uuid: uuid, type: type}) do
+    base_path = Application.get_env(:adhdo, :image_path, "/images/tasks")
+    "#{base_path}/#{uuid}.#{type}"
+  end
+
+  def get_image_url(uuid) when is_binary(uuid) do
+    get_image!(uuid) |> get_image_url()
   end
 end
