@@ -5,6 +5,21 @@ defmodule Adhdo.Release do
   """
   @app :adhdo
 
+  def create_database do
+    # For SQLite, the database file is created automatically
+    # when Ecto tries to connect, but you can ensure the
+    # directory exists
+    load_app()
+
+    for repo <- repos() do
+      case repo.__adapter__().storage_up(repo.config()) do
+        :ok -> IO.puts("Database created for #{inspect(repo)}")
+        {:error, :already_up} -> IO.puts("Database already exists for #{inspect(repo)}")
+        {:error, term} -> IO.puts("Error creating database: #{inspect(term)}")
+      end
+    end
+  end
+
   def migrate do
     load_app()
 
