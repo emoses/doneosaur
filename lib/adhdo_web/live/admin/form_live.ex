@@ -306,12 +306,6 @@ defmodule AdhdoWeb.Admin.FormLive do
         </div>
 
         <div class="form-group">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-            <label class="form-label" style="margin-bottom: 0;">Tasks</label>
-            <button type="button" phx-click="add_task" class="btn btn-secondary">
-              Add Task
-            </button>
-          </div>
 
           <%= if @tasks == [] do %>
             <p class="text-muted">No tasks yet. Click "Add Task" to create one.</p>
@@ -390,6 +384,11 @@ defmodule AdhdoWeb.Admin.FormLive do
               </div>
             </div>
           <% end %>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <button type="button" phx-click="add_task" class="btn">
+              + Add Task
+            </button>
+          </div>
         </div>
 
         <div class="form-actions">

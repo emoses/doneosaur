@@ -130,30 +130,35 @@ defmodule AdhdoWeb.HomeLive do
     </style>
 
     <div
-      class="container"
+      class="home container"
       phx-hook="ClientStorage"
       id="client-storage-hook"
       data-client-name={@client_name}
     >
-      <h1 class="title">Adhdo</h1>
+      <nav class="tools">
+        <a class="btn btn-secondary" href="/admin">⚙ Admin</a>
+      </nav>
+      <main>
+        <h1 class="title">Adhdo</h1>
 
-      <div :if={@show_registration} class="registration-card">
-        <form phx-submit="register_client">
-          <label for="client-name-input" class="form-label">Device name</label>
-          <input
-            type="text"
-            id="client-name-input"
-            name="client_name"
-            class="form-input"
-            placeholder="Enter this device's name"
-            autofocus
-            autocomplete="off"
-          />
-          <button type="submit" class="form-button">
-            Get Started
-          </button>
-        </form>
-      </div>
+        <div :if={@show_registration} class="registration-card">
+            <form phx-submit="register_client">
+            <label for="client-name-input" class="form-label">Device name</label>
+            <input
+                type="text"
+                id="client-name-input"
+                name="client_name"
+                class="form-input"
+                placeholder="Enter this device's name"
+                autofocus
+                autocomplete="off"
+            />
+            <button type="submit" class="form-button">
+                Get Started
+            </button>
+            </form>
+        </div>
+      </main>
     </div>
     """
   end

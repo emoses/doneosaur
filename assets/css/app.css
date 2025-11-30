@@ -24,17 +24,33 @@
 body {
     margin: 0;
     font-family: system-ui, -apple-system, sans-serif;
+    background: linear-gradient(135deg, #e0f2fe 0%, #ddd6fe 100%);
 }
 
 .container {
   height: 100vh;
   width: 100vw;
-  background: linear-gradient(135deg, #e0f2fe 0%, #ddd6fe 100%);
   display: flex;
   flex-direction: column;
   padding: 2vh;
   overflow: hidden;
 }
+
+.home main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+nav.tools {
+    align-self: flex-start;
+}
+
+nav.tools a {
+    text-decoration: none;
+}
+
 
 header {
   margin-bottom: 2vh;
@@ -53,6 +69,8 @@ header .controls {
     grid-column: 3;
     justify-self: end;
 }
+
+
 
 .title {
   font-size: 8vh;
