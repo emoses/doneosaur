@@ -14,7 +14,6 @@ defmodule AdhdoWeb.ClientLive do
       Phoenix.PubSub.subscribe(Adhdo.PubSub, "current_list")
     end
 
-    # Get active list for this client (will return default list if none assigned)
     list_id = Sessions.get_current_list()
 
     socket =

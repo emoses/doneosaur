@@ -9,6 +9,12 @@ defmodule AdhdoWeb.TaskListHelpers do
 
   alias Adhdo.{Lists, Sessions}
 
+  def init_task_list(socket, nil) do
+    socket
+    |> assign(:task_list, nil)
+    |> assign(:completed_tasks, [])
+  end
+
   @doc """
   Initializes a task list session in a LiveView socket.
   Call this from mount/3 after determining which list_id to display.

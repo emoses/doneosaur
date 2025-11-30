@@ -353,7 +353,9 @@ defmodule AdhdoWeb.Admin.FormLive do
                       phx-value-index={index}
                       class="btn btn-secondary"
                     >
-                      {if task.image_id, do: "Change Image (#{task.image_id |> String.slice(0..7)})", else: "Add Image"}
+                      {if task.image_id,
+                        do: "Change Image (#{task.image_id |> String.slice(0..7)})",
+                        else: "Add Image"}
                     </button>
                   </div>
                 </div>
