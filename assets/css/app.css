@@ -73,14 +73,12 @@ header .controls {
 
 
 .title {
-  font-size: 8vh;
   font-weight: bold;
   color: #1f2937;
   margin: 0 0 1vh 0;
 }
 
 .description {
-  font-size: 4vh;
   color: #6b7280;
   margin: 0;
 }

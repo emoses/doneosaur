@@ -26,10 +26,11 @@ defmodule AdhdoWeb.TaskListDisplay do
     task_height = available_height / task_count
 
     assigns = assign(assigns, task_height: task_height)
+        |> assign(header_height: header_height)
 
     ~H"""
     <div class="container">
-      <header>
+      <header style={"height: #{@header_height}vh"}>
         <div class="content">
           <h1 class="title">{@task_list.name}</h1>
           <p :if={@task_list.description} class="description">{@task_list.description}</p>
