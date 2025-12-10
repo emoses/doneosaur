@@ -49,15 +49,6 @@ defmodule Adhdo.MixProject do
       {:phoenix_live_view, "~> 1.1.0"},
       {:lazy_html, ">= 0.1.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.8.3"},
-      {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
-      {:heroicons,
-       github: "tailwindlabs/heroicons",
-       tag: "v2.2.0",
-       sparse: "optimized",
-       app: false,
-       compile: false,
-       depth: 1},
       {:swoosh, "~> 1.16"},
       {:req, "~> 0.5"},
       {:telemetry_metrics, "~> 1.0"},
@@ -67,6 +58,14 @@ defmodule Adhdo.MixProject do
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"}
     ]
+  end
+
+  defp build_assets(_) do
+    System.cmd("node", ["build.js", "--deploy"],
+               cd: "assets",
+               env: [{"NODE_PATH", Mix.Project.build_path()}],
+               into: IO.stream(:stdio, :line)
+    )
   end
 
   # Aliases are shortcuts or tasks specific to the current project.
@@ -81,11 +80,10 @@ defmodule Adhdo.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
-      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      "assets.build": ["compile", "tailwind adhdo", "esbuild adhdo"],
+      "assets.setup": ["esbuild.install --if-missing"],
+      "assets.build": ["compile", "esbuild adhdo"],
       "assets.deploy": [
-        "tailwind adhdo --minify",
-        "esbuild adhdo --minify",
+        &build_assets/1,
         "phx.digest"
       ],
       precommit: ["compile --warning-as-errors", "deps.unlock --unused", "format", "test"]

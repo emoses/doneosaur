@@ -22,8 +22,11 @@ config :adhdo, AdhdoWeb.Endpoint,
   debug_errors: true,
   secret_key_base: "mY2BYpFwrzcVqOKh0N6k8qlD//424j65hldtSpYW1j+wLCNTY1LahTvPSPA+NHkS",
   watchers: [
-    esbuild: {Esbuild, :install_and_run, [:adhdo, ~w(--sourcemap=inline --watch)]},
-    tailwind: {Tailwind, :install_and_run, [:adhdo, ~w(--watch)]}
+    node: ["build.js", "--watch",
+           cd: Path.expand("../assets", __DIR__),
+           env: [{"NODE_PATH", Path.expand(Mix.Project.build_path(), __DIR__)}],
+    ],
+    # esbuild: {Esbuild, :install_and_run, [:adhdo, ~w(--sourcemap=inline --watch)]},
   ]
 
 # ## SSL Support

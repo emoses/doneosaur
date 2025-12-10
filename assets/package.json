@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "esbuild": "^0.27.1"
+  },
+  "dependencies": {
+    "phoenix": "../deps/phoenix",
+    "phoenix_html": "../deps/phoenix_html",
+    "phoenix_live_view": "../deps/phoenix_live_view"
+  }
+}
