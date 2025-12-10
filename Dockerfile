@@ -14,6 +14,7 @@
 ARG ELIXIR_VERSION=1.19.3
 ARG OTP_VERSION=28.1.1
 ARG DEBIAN_VERSION=bookworm-20251117-slim
+ARG NODE_VERSION=20.x
 
 ARG BUILDER_IMAGE="docker.io/hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
 ARG RUNNER_IMAGE="docker.io/debian:${DEBIAN_VERSION}"
@@ -21,8 +22,14 @@ ARG RUNNER_IMAGE="docker.io/debian:${DEBIAN_VERSION}"
 FROM ${BUILDER_IMAGE} AS builder
 
 # install build dependencies
+ARG NODE_VERSION
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends build-essential git \
+  && apt-get install -y --no-install-recommends build-essential git curl ca-certificates gnupg \
+  && mkdir -p /etc/apt/keyrings \
+  && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
+  && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_VERSION} nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
+  && apt-get update \
+  && apt-get install -y --no-install-recommends nodejs \
   && rm -rf /var/lib/apt/lists/*
 
 # prepare build dir
@@ -46,8 +53,6 @@ RUN mkdir config
 COPY config/config.exs config/${MIX_ENV}.exs config/
 RUN mix deps.compile
 
-RUN mix assets.setup
-
 COPY priv priv
 
 COPY lib lib
@@ -56,6 +61,8 @@ COPY lib lib
 RUN mix compile
 
 COPY assets assets
+
+RUN mix assets.setup
 
 # compile assets
 RUN mix assets.deploy
