@@ -41,3 +41,5 @@ npm-debug.log
 *.db-wal
 
 /priv/static/images/tasks/
+/.claude/
+/priv/static

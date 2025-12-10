@@ -99,9 +99,11 @@ header .controls {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 4px solid transparent;
   transition: all 0.2s;
-  height: calc(var(--task-height) * 1vh);
-  padding: min(calc(var(--task-height) * 0.15 * 1rem), 1rem);
-  gap: min(calc(var(--task-height) * 0.15 * 2rem), 2rem);
+  min-height: 0;
+  padding: 2px;
+  gap: 1em;
+  container-type: size;
+  flex-grow: 1;
 }
 
 .task-item:hover {
@@ -118,8 +120,8 @@ header .controls {
 }
 
 .task-checkbox {
-  width: calc(var(--task-height) * 0.7 * 1vh);
-  height: calc(var(--task-height) * 0.7 * 1vh);
+  width: 90cqh;
+  height: 90cqh;
   border: 3px solid #9ca3af;
   border-radius: 0.5rem;
   cursor: pointer;
@@ -142,7 +144,7 @@ header .controls {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: calc(var(--task-height) * 0.5 * 1vh);
+  font-size: 7cqh;
   color: white;
   font-weight: bold;
   text-shadow: 0 0 3px rgba(0, 0, 0, 0.8),
@@ -155,7 +157,7 @@ header .controls {
 }
 
 .task-label {
-  font-size: calc(var(--task-height) * 0.5 * 1vh);
+  font-size: 50cqh;
   font-weight: 500;
   cursor: pointer;
   user-select: none;

@@ -17,16 +17,10 @@ defmodule AdhdoWeb.TaskListDisplay do
   attr :completed_tasks, :map, required: true
 
   def task_list(assigns) do
-    task_count = length(assigns.task_list.tasks)
     has_description = assigns.task_list.description != nil
-
-    gap_size = 1
     header_height = if has_description, do: 16, else: 12
-    available_height = 100 - header_height - gap_size * task_count - 8
-    task_height = available_height / task_count
 
-    assigns = assign(assigns, task_height: task_height)
-        |> assign(header_height: header_height)
+    assigns = assign(assigns, header_height: header_height)
 
     ~H"""
     <div class="container">
@@ -40,29 +34,49 @@ defmodule AdhdoWeb.TaskListDisplay do
         </div>
       </header>
 
-      <div class="tasks-container" style={"--task-height: #{@task_height}"}>
-        <div
-          :for={task <- @task_list.tasks}
-          class={"task-item #{if MapSet.member?(@completed_tasks, task.id), do: "completed", else: ""}"}
-          phx-click="toggle_task"
-          phx-value-task-id={task.id}
-        >
-          <% image_url = if task.image_id, do: Lists.get_image_url(task.image_id), else: nil %>
-          <input
-            type="checkbox"
-            id={"task-#{task.id}"}
-            checked={MapSet.member?(@completed_tasks, task.id)}
-            class={"task-checkbox #{if image_url, do: "has-image", else: ""}"}
-            style={if image_url, do: "background-image: url(#{image_url})", else: ""}
-          />
-          <label for={"task-#{task.id}"} class="task-label">
-            {task.text}
-          </label>
-        </div>
+      <div class="tasks-container">
+        <%= if Enum.all?(@task_list.tasks, fn t -> MapSet.member?(@completed_tasks, t.id) end) do %>
+          <.complete/>
+        <% else %>
+            <div
+            :for={task <- @task_list.tasks}
+            class={"task-item #{if MapSet.member?(@completed_tasks, task.id), do: "completed", else: ""}"}
+            phx-click="toggle_task"
+            phx-value-task-id={task.id}
+            >
+            <% image_url = if task.image_id, do: Lists.get_image_url(task.image_id), else: nil %>
+            <input
+                type="checkbox"
+                id={"task-#{task.id}"}
+                checked={MapSet.member?(@completed_tasks, task.id)}
+                class={"task-checkbox #{if image_url, do: "has-image", else: ""}"}
+                style={if image_url, do: "background-image: url(#{image_url})", else: ""}
+            />
+            <label for={"task-#{task.id}"} class="task-label">
+                {task.text}
+            </label>
+            </div>
+        <% end %>
       </div>
     </div>
     """
   end
+
+  @doc """
+  Renders an "all done" message.
+  """
+  attr :message, :string, default: "All done!"
+  attr :img_url, :string, default: nil
+
+  def complete(assigns) do
+    ~H"""
+    <div class="complete">
+      <img :if={@img_url} src={@img_url} />
+      <div class="message">{@message}</div>
+    </div>
+    """
+  end
+
 
   @doc """
   Renders a waiting screen when no task list is available.
