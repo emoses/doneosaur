@@ -45,9 +45,9 @@ let opts = {
   bundle: true,
   logLevel: "info",
   target: "es2022",
-  outdir: "../priv/static/assets",
-  external: ["*.css", "fonts/*", "images/*"],
-  nodePaths: ["../deps", process.env.NODE_PATH],
+  outdir: "../priv/static/assets/js",
+  external: ["*.css", "fonts/*", "images/*", "audio/*"],
+  nodePaths: ["../deps", process.env.NODE_PATH].filter(p => p != null),
   loader: loader,
   plugins: plugins,
 };

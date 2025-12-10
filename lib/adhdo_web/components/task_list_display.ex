@@ -17,14 +17,9 @@ defmodule AdhdoWeb.TaskListDisplay do
   attr :completed_tasks, :map, required: true
 
   def task_list(assigns) do
-    has_description = assigns.task_list.description != nil
-    header_height = if has_description, do: 16, else: 12
-
-    assigns = assign(assigns, header_height: header_height)
-
     ~H"""
     <div class="container">
-      <header style={"height: #{@header_height}vh"}>
+      <header>
         <div class="content">
           <h1 class="title">{@task_list.name}</h1>
           <p :if={@task_list.description} class="description">{@task_list.description}</p>
@@ -44,13 +39,14 @@ defmodule AdhdoWeb.TaskListDisplay do
             phx-click="toggle_task"
             phx-value-task-id={task.id}
             >
-            <% image_url = if task.image_id, do: Lists.get_image_url(task.image_id), else: nil %>
+            <% image_url = if task.image_id, do: Lists.get_image_url(task.image), else: nil %>
             <input
                 type="checkbox"
                 id={"task-#{task.id}"}
                 checked={MapSet.member?(@completed_tasks, task.id)}
                 class={"task-checkbox #{if image_url, do: "has-image", else: ""}"}
                 style={if image_url, do: "background-image: url(#{image_url})", else: ""}
+                phx-hook=".TaskCheckSound"
             />
             <label for={"task-#{task.id}"} class="task-label">
                 {task.text}
@@ -59,6 +55,34 @@ defmodule AdhdoWeb.TaskListDisplay do
         <% end %>
       </div>
     </div>
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".TaskCheckSound">
+      export default {
+
+        mounted() {
+            this.audio = new Audio('/audio/badink.mp3')
+            this.audio.preload = 'auto'
+
+            // Track the previous checked state
+            this.wasChecked = this.el.checked
+        },
+        updated() {
+            console.log("Hook")
+            const isNowChecked = this.el.checked
+
+            // Only play sound when transitioning from unchecked to checked
+            if (!this.wasChecked && isNowChecked) {
+                console.log("playing")
+                this.audio.currentTime = 0
+                this.audio.play().catch(err => {
+                    // Ignore errors (e.g., if audio file doesn't exist yet)
+                    console.debug('Audio play prevented:', err)
+                })
+            }
+
+            this.wasChecked = isNowChecked
+        }
+      }
+    </script>
     """
   end
 

@@ -24,7 +24,7 @@ defmodule Adhdo.Lists do
   """
   def get_task_list!(id) do
     Repo.get!(TaskList, id)
-    |> Repo.preload(:tasks)
+    |> Repo.preload([tasks: [:image]])
   end
 
   @doc """

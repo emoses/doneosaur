@@ -60,8 +60,8 @@ defmodule Adhdo.MixProject do
     ]
   end
 
-  defp build_assets(_) do
-    System.cmd("node", ["build.js", "--deploy"],
+  defp build_assets(extra_args, _) do
+    System.cmd("node", ["build.js" | extra_args],
                cd: "assets",
                env: [{"NODE_PATH", Mix.Project.build_path()}],
                into: IO.stream(:stdio, :line)
@@ -80,10 +80,10 @@ defmodule Adhdo.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
-      "assets.setup": ["esbuild.install --if-missing"],
-      "assets.build": ["compile", "esbuild adhdo"],
+      "assets.setup": ["cmd --cd assets npm install"],
+      "assets.build": [&build_assets([], &1)],
       "assets.deploy": [
-        &build_assets/1,
+        &build_assets(["--deploy"], &1),
         "phx.digest"
       ],
       precommit: ["compile --warning-as-errors", "deps.unlock --unused", "format", "test"]
