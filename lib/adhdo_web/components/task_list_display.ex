@@ -3,6 +3,7 @@ defmodule AdhdoWeb.TaskListDisplay do
   Stateless function component for rendering task lists.
   """
   use Phoenix.Component
+  alias Phoenix.LiveView.JS
 
   alias Adhdo.Lists
 
@@ -19,6 +20,21 @@ defmodule AdhdoWeb.TaskListDisplay do
   def task_list(assigns) do
     ~H"""
     <div class="container">
+      <audio id="task-sound" preload="auto">
+        <source src="/audio/badink.mp3" type="audio/mpeg">
+      </audio>
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          const audio = document.getElementById('task-sound');
+          if (audio) {
+            audio.addEventListener('click', function() {
+              this.currentTime = 0;
+              this.play().catch(err => console.debug('Audio play prevented:', err));
+            });
+          }
+        });
+      </script>
+
       <header>
         <div class="content">
           <h1 class="title">{@task_list.name}</h1>
@@ -36,8 +52,10 @@ defmodule AdhdoWeb.TaskListDisplay do
             <div
             :for={task <- @task_list.tasks}
             class={"task-item #{if MapSet.member?(@completed_tasks, task.id), do: "completed", else: ""}"}
-            phx-click="toggle_task"
-            phx-value-task-id={task.id}
+            phx-click={
+              JS.dispatch("click", to: "#task-sound")
+              |> JS.push("toggle_task", value: %{"task-id": task.id})
+            }
             >
             <% image_url = if task.image_id, do: Lists.get_image_url(task.image), else: nil %>
             <input
@@ -46,7 +64,6 @@ defmodule AdhdoWeb.TaskListDisplay do
                 checked={MapSet.member?(@completed_tasks, task.id)}
                 class={"task-checkbox #{if image_url, do: "has-image", else: ""}"}
                 style={if image_url, do: "background-image: url(#{image_url})", else: ""}
-                phx-hook=".TaskCheckSound"
             />
             <label for={"task-#{task.id}"} class="task-label">
                 {task.text}
@@ -55,34 +72,6 @@ defmodule AdhdoWeb.TaskListDisplay do
         <% end %>
       </div>
     </div>
-    <script :type={Phoenix.LiveView.ColocatedHook} name=".TaskCheckSound">
-      export default {
-
-        mounted() {
-            this.audio = new Audio('/audio/badink.mp3')
-            this.audio.preload = 'auto'
-
-            // Track the previous checked state
-            this.wasChecked = this.el.checked
-        },
-        updated() {
-            console.log("Hook")
-            const isNowChecked = this.el.checked
-
-            // Only play sound when transitioning from unchecked to checked
-            if (!this.wasChecked && isNowChecked) {
-                console.log("playing")
-                this.audio.currentTime = 0
-                this.audio.play().catch(err => {
-                    // Ignore errors (e.g., if audio file doesn't exist yet)
-                    console.debug('Audio play prevented:', err)
-                })
-            }
-
-            this.wasChecked = isNowChecked
-        }
-      }
-    </script>
     """
   end
 

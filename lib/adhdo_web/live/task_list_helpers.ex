@@ -49,7 +49,6 @@ defmodule AdhdoWeb.TaskListHelpers do
   Call this from handle_event/3 in your LiveView.
   """
   def handle_toggle_task(%{"task-id" => task_id}, socket) do
-    task_id = String.to_integer(task_id)
     list_id = socket.assigns.task_list.id
 
     {:ok, _completed?} = Sessions.toggle_task(list_id, task_id)
