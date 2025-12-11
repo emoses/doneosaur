@@ -24,13 +24,14 @@ defmodule AdhdoWeb.TaskListDisplay do
         <source src="/audio/badink.mp3" type="audio/mpeg">
       </audio>
       <script>
-        document.addEventListener('DOMContentLoaded', function() {
-          const audio = document.getElementById('task-sound');
-          if (audio) {
-            audio.addEventListener('click', function() {
-              this.currentTime = 0;
-              this.play().catch(err => console.debug('Audio play prevented:', err));
-            });
+        window.addEventListener('adhdo:task_toggled', (e) => {
+          const checkbox = e.target.querySelector('.task-checkbox');
+          // Optimistic: if the task is *not* checked, we're gonna check it when the
+          // toggle returns, so play the sound
+          if (!checkbox.checked) {
+            const audio = document.getElementById('task-sound');
+            audio.currentTime = 0;
+            audio.play().catch(err => console.debug('Audio play prevented:', err));
           }
         });
       </script>
@@ -45,7 +46,7 @@ defmodule AdhdoWeb.TaskListDisplay do
         </div>
       </header>
 
-      <div class="tasks-container">
+      <div class="tasks-container" style={"--n-tasks: #{length(@task_list.tasks)}"}>
         <%= if Enum.all?(@task_list.tasks, fn t -> MapSet.member?(@completed_tasks, t.id) end) do %>
           <.complete/>
         <% else %>
@@ -53,7 +54,7 @@ defmodule AdhdoWeb.TaskListDisplay do
             :for={task <- @task_list.tasks}
             class={"task-item #{if MapSet.member?(@completed_tasks, task.id), do: "completed", else: ""}"}
             phx-click={
-              JS.dispatch("click", to: "#task-sound")
+              JS.dispatch("adhdo:task_toggled")
               |> JS.push("toggle_task", value: %{"task-id": task.id})
             }
             >
