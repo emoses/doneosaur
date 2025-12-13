@@ -42,7 +42,10 @@ defmodule AdhdoWeb.TaskListDisplay do
           <p :if={@task_list.description} class="description">{@task_list.description}</p>
         </div>
         <div class="controls">
-          <button phx-click="reset_list">Reset</button>
+          <button class="btn btn-secondary" phx-click="reset_list">
+            <span class="btn-icon">🔄</span>
+            Reset
+          </button>
         </div>
       </header>
 
