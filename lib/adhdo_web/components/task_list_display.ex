@@ -88,6 +88,9 @@ defmodule AdhdoWeb.TaskListDisplay do
   def complete(assigns) do
     ~H"""
     <div class="complete">
+      <audio id="success-sound" preload="auto" autoplay>
+        <source src="/audio/success.wav" type="audio/wav">
+      </audio>
       <img :if={@img_url} src={@img_url} />
       <div class="message">{@message}</div>
     </div>
