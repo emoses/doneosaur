@@ -112,9 +112,28 @@ defmodule AdhdoWeb.Admin.IndexLive do
                 </button>
               </div>
             </div>
+            <.schedule schedules={list.schedules}/>
+
           </div>
         </div>
       <% end %>
+    </div>
+    """
+  end
+
+  attr :schedules, :list, required: true
+  defp schedule(%{schedules: schedules} = assigns) do
+    day_scheds = Enum.group_by(schedules, &(&1.day_of_week))
+    ~H"""
+    <div class="schedule">
+      <div :for={day <- 1..7} class="day">
+        <div class="dayName">{Lists.Schedule.day_name(day)}</div>
+        <div class="blockList">
+          <div :for={sched <- Map.get(day_scheds, day, [])} class="block">
+            {Calendar.strftime(sched.time, "%-I:%M %p")}
+          </div>
+        </div>
+      </div>
     </div>
     """
   end

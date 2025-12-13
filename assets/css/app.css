@@ -695,3 +695,28 @@ header .controls {
     border-radius: 0.375rem;
     margin-bottom: 0.5rem;
 }
+
+
+/* Schedule */
+.schedule {
+    width: 80%;
+    display: flex;
+    gap: 3px;
+    min-height: 10vh;
+}
+
+.schedule .day {
+    flex: 1;
+}
+
+.schedule .day .dayName {
+    text-align: center;
+    font-size: .7rem;
+    margin-bottom: 2px;
+}
+
+.schedule .day .blockList {
+    border: 1px solid #DDD;
+    border-radius: 2px;
+    height: 100%;
+}

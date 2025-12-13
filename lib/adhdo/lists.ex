@@ -10,12 +10,13 @@ defmodule Adhdo.Lists do
 
   @doc """
   Returns the list of all task lists.
-  Preloads tasks for each list.
+  Preloads tasks and schedules for each list.
   """
   def list_task_lists do
     TaskList
     |> Repo.all()
     |> Repo.preload(:tasks)
+    |> Repo.preload(:schedules)
   end
 
   @doc """
@@ -25,6 +26,7 @@ defmodule Adhdo.Lists do
   def get_task_list!(id) do
     Repo.get!(TaskList, id)
     |> Repo.preload([tasks: [:image]])
+    |> Repo.preload(:schedules)
   end
 
   @doc """
