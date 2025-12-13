@@ -4,7 +4,7 @@ defmodule Adhdo.Lists do
   """
 
   alias Adhdo.Repo
-  alias Adhdo.Lists.{TaskList, Task, Image}
+  alias Adhdo.Lists.{TaskList, Task, Image, Schedule}
 
   ## TaskList functions
 
@@ -229,5 +229,152 @@ defmodule Adhdo.Lists do
 
   def get_image_url(uuid) when is_binary(uuid) do
     get_image!(uuid) |> get_image_url()
+  end
+
+  ## Schedule functions
+
+  @doc """
+  Returns all schedules, optionally preloading task lists.
+  """
+  def list_schedules(preload_task_list \\ false) do
+    import Ecto.Query
+
+    query = Schedule
+    |> order_by([s], [asc: s.day_of_week, asc: s.time])
+
+    query =
+      if preload_task_list do
+        query |> Repo.preload(:task_list)
+      else
+        query
+      end
+
+    Repo.all(query)
+  end
+
+  @doc """
+  Returns all schedules for a specific task list.
+  """
+  def list_schedules_for_task_list(task_list_id) do
+    import Ecto.Query
+
+    Schedule
+    |> where([s], s.task_list_id == ^task_list_id)
+    |> order_by([s], [asc: s.day_of_week, asc: s.time])
+    |> Repo.all()
+  end
+
+  @doc """
+  Returns all schedules for a specific day of week and time.
+  """
+  def list_schedules_for_time(day_of_week, time) do
+    import Ecto.Query
+
+    Schedule
+    |> where([s], s.day_of_week == ^day_of_week and s.time == ^time)
+    |> preload(:task_list)
+    |> Repo.all()
+  end
+
+  @doc """
+  Gets a single schedule by ID.
+  """
+  def get_schedule!(id) do
+    Repo.get!(Schedule, id)
+  end
+
+  @doc """
+  Creates a schedule.
+  Notifies the scheduler to reload.
+  """
+  def create_schedule(attrs \\ %{}) do
+    result =
+      %Schedule{}
+      |> Schedule.changeset(attrs)
+      |> Repo.insert()
+
+    case result do
+      {:ok, _schedule} -> notify_scheduler_reload()
+      _ -> :ok
+    end
+
+    result
+  end
+
+  @doc """
+  Deletes a schedule.
+  Notifies the scheduler to reload.
+  """
+  def delete_schedule(%Schedule{} = schedule) do
+    result = Repo.delete(schedule)
+
+    case result do
+      {:ok, _schedule} -> notify_scheduler_reload()
+      _ -> :ok
+    end
+
+    result
+  end
+
+  @doc """
+  Deletes all schedules for a specific task list.
+  Useful when replacing all schedules at once.
+  """
+  def delete_schedules_for_task_list(task_list_id) do
+    import Ecto.Query
+
+    Schedule
+    |> where([s], s.task_list_id == ^task_list_id)
+    |> Repo.delete_all()
+  end
+
+  @doc """
+  Replaces all schedules for a task list with new ones.
+  Takes a list of schedule attributes (without task_list_id).
+  Notifies the scheduler to reload.
+
+  Example:
+      set_schedules_for_task_list(task_list.id, [
+        %{day_of_week: 1, time: ~T[07:30:00]},
+        %{day_of_week: 2, time: ~T[07:30:00]},
+        %{day_of_week: 5, time: ~T[16:00:00]}
+      ])
+  """
+  def set_schedules_for_task_list(task_list_id, schedule_attrs_list) do
+    result =
+      Repo.transaction(fn ->
+        # Delete existing schedules
+        delete_schedules_for_task_list(task_list_id)
+
+        # Insert new schedules (using internal create without notification)
+        schedules =
+          Enum.map(schedule_attrs_list, fn attrs ->
+            attrs = Map.put(attrs, :task_list_id, task_list_id)
+
+            case %Schedule{} |> Schedule.changeset(attrs) |> Repo.insert() do
+              {:ok, schedule} -> schedule
+              {:error, changeset} -> Repo.rollback(changeset)
+            end
+          end)
+
+        schedules
+      end)
+
+    # Notify scheduler after transaction completes
+    case result do
+      {:ok, _schedules} -> notify_scheduler_reload()
+      _ -> :ok
+    end
+
+    result
+  end
+
+  # Private helper to notify scheduler of changes
+  defp notify_scheduler_reload do
+    try do
+      Adhdo.Scheduler.reload()
+    catch
+      :exit, _ -> :ok
+    end
   end
 end

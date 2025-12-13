@@ -9,7 +9,8 @@ import Config
 
 config :adhdo,
   ecto_repos: [Adhdo.Repo],
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime],
+  timezone: System.get_env("TZ") || "America/Los_Angeles"
 
 # Configures the endpoint
 config :adhdo, AdhdoWeb.Endpoint,
@@ -35,6 +36,9 @@ config :adhdo, Adhdo.Mailer, adapter: Swoosh.Adapters.Local
 config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
+
+# Load the tz database
+config :elixir, :time_zone_database, Tz.TimeZoneDatabase
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason

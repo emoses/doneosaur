@@ -18,8 +18,8 @@ defmodule Adhdo.Application do
         id: Adhdo.Sessions,
         start: {Adhdo.Sessions, :start_link, [[]]}
       },
-      # Start a worker by calling: Adhdo.Worker.start_link(arg)
-      # {Adhdo.Worker, arg},
+      # Scheduler for activating task lists at scheduled times
+      Adhdo.Scheduler,
       # Start to serve requests, typically the last entry
       AdhdoWeb.Endpoint
     ]

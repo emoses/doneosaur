@@ -7,6 +7,7 @@ defmodule Adhdo.Lists.TaskList do
     field :description, :string
 
     has_many :tasks, Adhdo.Lists.Task, preload_order: [asc: :order], on_replace: :delete
+    has_many :schedules, Adhdo.Lists.Schedule, on_replace: :delete
 
     timestamps()
   end
