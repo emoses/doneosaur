@@ -51,7 +51,7 @@ defmodule AdhdoWeb.TaskListDisplay do
 
       <div class="tasks-container" style={"--n-tasks: #{length(@task_list.tasks)}"}>
         <%= if Enum.all?(@task_list.tasks, fn t -> MapSet.member?(@completed_tasks, t.id) end) do %>
-          <.complete/>
+          <.complete>All<br/>Done!</.complete>
         <% else %>
             <div
             :for={task <- @task_list.tasks}
@@ -82,7 +82,7 @@ defmodule AdhdoWeb.TaskListDisplay do
   @doc """
   Renders an "all done" message.
   """
-  attr :message, :string, default: "All done!"
+  slot :inner_block, required: true
   attr :img_url, :string, default: nil
 
   def complete(assigns) do
@@ -92,7 +92,7 @@ defmodule AdhdoWeb.TaskListDisplay do
         <source src="/audio/success.wav" type="audio/wav">
       </audio>
       <img :if={@img_url} src={@img_url} />
-      <div class="message">{@message}</div>
+      <div class="message">{render_slot(@inner_block)}</div>
     </div>
     """
   end

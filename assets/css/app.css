@@ -209,19 +209,20 @@ header .controls {
 }
 
 .complete .message {
-    font-size: 40vh;
+    font-size: 5rem;
     font-weight: bold;
     text-align: center;
     background-image: conic-gradient(
         from 0deg at 50% 50%,
-        oklch(0.75 0.25 30),
-        oklch(0.75 0.25 70),
-        oklch(0.75 0.25 100),
-        oklch(0.75 0.25 145),
-        oklch(0.75 0.25 195),
-        oklch(0.75 0.25 265),
-        oklch(0.75 0.25 320),
-        oklch(0.75 0.25 30)
+        hsl(0, 80%, 60%),
+        hsl(45, 80%, 60%),
+        hsl(90, 80%, 60%),
+        hsl(135, 80%, 60%),
+        hsl(180, 80%, 60%),
+        hsl(225, 80%, 60%),
+        hsl(270, 80%, 60%),
+        hsl(315, 80%, 60%),
+        hsl(360, 80%, 60%)
     );
     background-size: 300% 300%;
     background-clip: text;
