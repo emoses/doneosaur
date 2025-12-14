@@ -23,12 +23,19 @@ defmodule AdhdoWeb.TaskListDisplay do
       <audio id="task-sound" preload="auto">
         <source src="/audio/badink.mp3" type="audio/mpeg">
       </audio>
+      <audio id="success-sound" preload="auto">
+        <source src="/audio/success.wav" type="audio/wav">
+      </audio>
       <script>
         window.addEventListener('adhdo:task_toggled', (e) => {
           const checkbox = e.target.querySelector('.task-checkbox');
           // Optimistic: if the task is *not* checked, we're gonna check it when the
           // toggle returns, so play the sound
-          if (!checkbox.checked) {
+          if (e.detail && e.detail.remaining <= 1) {
+            const audio = document.getElementById('success-sound');
+            audio.currentTime = 0;
+            audio.play().catch(err => console.debug('Audio play prevented:', err));
+          } else if (!checkbox.checked) {
             const audio = document.getElementById('task-sound');
             audio.currentTime = 0;
             audio.play().catch(err => console.debug('Audio play prevented:', err));
@@ -57,7 +64,7 @@ defmodule AdhdoWeb.TaskListDisplay do
             :for={task <- @task_list.tasks}
             class={"task-item #{if MapSet.member?(@completed_tasks, task.id), do: "completed", else: ""}"}
             phx-click={
-              JS.dispatch("adhdo:task_toggled")
+              JS.dispatch("adhdo:task_toggled", detail: %{remaining: length(@task_list.tasks) - MapSet.size(@completed_tasks)})
               |> JS.push("toggle_task", value: %{"task-id": task.id})
             }
             >
@@ -87,13 +94,19 @@ defmodule AdhdoWeb.TaskListDisplay do
 
   def complete(assigns) do
     ~H"""
-    <div class="complete">
-      <audio id="success-sound" preload="auto" autoplay>
-        <source src="/audio/success.wav" type="audio/wav">
-      </audio>
+    <div class="complete" id="complete" phx-hook=".PlayComplete">
       <img :if={@img_url} src={@img_url} />
       <div class="message">{render_slot(@inner_block)}</div>
     </div>
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".PlayComplete">
+      export default {
+        mounted() {
+            const audio = document.getElementById('success-sound');
+            audio.currentTime = 0;
+            audio.play().catch(err => console.debug('Audio play prevented:', err));
+        }
+      };
+    </script>
     """
   end
 
