@@ -59,6 +59,18 @@ header {
     align-items: center;
 }
 
+header .left-controls {
+    grid-column: 1;
+    justify-self: start;
+    align-self: start;
+}
+
+header .left-controls a {
+    text-decoration: none;
+    font-size: 120%;
+    color: #1c7add;
+}
+
 header .content {
     text-align: center;
     grid-column: 2;
