@@ -402,7 +402,7 @@ defmodule AdhdoWeb.Admin.FormLive do
       </.form>
 
       <%= if @selected_task_index != nil do %>
-        <div class="image-picker-modal" phx-click="close_image_picker">
+        <div class="image-picker-modal modal" phx-click="close_image_picker">
           <div class="image-picker-content" phx-click="prevent_close">
             <div class="image-picker-header">
               <h2>Select or Upload Image</h2>

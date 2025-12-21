@@ -144,6 +144,11 @@ const DragDropTaskList = {
   }
 }
 
+// Dialog handlers
+window.addEventListener("hide-dialog", event => event.target?.close())
+window.addEventListener("show-dialog", event => event.target?.showModal())
+
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,

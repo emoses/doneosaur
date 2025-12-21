@@ -2,6 +2,7 @@ defmodule AdhdoWeb.Admin.IndexLive do
   use AdhdoWeb, :live_view
 
   alias Adhdo.{Lists, Sessions}
+  alias Adhdo.Lists.Schedule
 
   @impl true
   def mount(_params, _session, socket) do
@@ -11,7 +12,8 @@ defmodule AdhdoWeb.Admin.IndexLive do
     {:ok,
      socket
      |> assign(:task_lists, task_lists)
-     |> assign(:current_list_id, current_list_id)}
+     |> assign(:current_list_id, current_list_id)
+     |> assign(:sched_task_list, nil)}
   end
 
   @impl true
@@ -23,6 +25,21 @@ defmodule AdhdoWeb.Admin.IndexLive do
      socket
      |> assign(:current_list_id, list_id)
      |> put_flash(:info, "Current list updated successfully")}
+  end
+
+  @impl true
+  def handle_event("sched_task_list", %{"list-id" => list_id}, socket) do
+    list_id = String.to_integer(list_id)
+    {:noreply,
+     socket
+     |> assign(:sched_task_list, list_id)}
+  end
+
+  @impl true
+  def handle_event("hide-scheduler", _, socket) do
+    {:noreply,
+     socket
+     |> assign(:sched_task_list, nil)}
   end
 
   @impl true
@@ -51,6 +68,58 @@ defmodule AdhdoWeb.Admin.IndexLive do
 
       {:error, _changeset} ->
         {:noreply, put_flash(socket, :error, "Failed to delete task list")}
+    end
+  end
+
+  @impl true
+  def handle_event("delete_sched", %{"sched-id" => sched_id}, socket) do
+    sched = Lists.get_schedule!(sched_id)
+
+    case Lists.delete_schedule(sched) do
+      {:ok, _} ->
+        newlist = Lists.get_task_list!(sched.task_list_id)
+        index = Enum.find_index(socket.assigns.task_lists, fn l -> l.id == sched.task_list_id end)
+        {:noreply,
+          socket
+          |> assign(:task_lists, List.replace_at(socket.assigns.task_lists, index, newlist))}
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to delete sched")}
+    end
+  end
+
+  @impl true
+  def handle_event("create-scheds", vals, socket) do
+    # %{
+    #   "day2" => "on",
+    #   "day5" => "on",
+    #   "task_list_id" => "12",
+    #   "time-input" => "03:00"
+    # }
+    attrs = for x <- 1..7 do
+              if Map.get(vals, "day#{x}", "off") == "on" do
+                %{
+                  day_of_week: x,
+                  time: vals["time-input"],
+                  task_list_id: vals["task_list_id"],
+                }
+              end
+    end
+    |> Enum.reject(&is_nil/1)
+
+    IO.inspect(attrs)
+
+    case Lists.create_schedules(attrs) do
+      {:ok, _} ->
+        task_list_id = String.to_integer(vals["task_list_id"])
+        newlist = Lists.get_task_list!(task_list_id)
+        index = Enum.find_index(socket.assigns.task_lists, fn l -> l.id == task_list_id end)
+        {:noreply,
+          socket
+          |> assign(:task_lists, List.replace_at(socket.assigns.task_lists, index, newlist))
+          |> assign(:sched_task_list, nil)
+        }
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to create new sched")}
     end
   end
 
@@ -102,6 +171,11 @@ defmodule AdhdoWeb.Admin.IndexLive do
                 <.link navigate={~p"/admin/lists/#{list.id}/edit"} class="btn btn-secondary">
                   Edit
                 </.link>
+                <button phx-click="sched_task_list"
+                  phx-value-list-id={list.id}
+                  class="btn btn-secondary">
+                  Schedule
+                </button>
                 <button
                   phx-click="delete_list"
                   phx-value-list-id={list.id}
@@ -118,23 +192,68 @@ defmodule AdhdoWeb.Admin.IndexLive do
         </div>
       <% end %>
     </div>
+    <.schedule_picker :if={@sched_task_list} task_list_id={@sched_task_list}/>
     """
   end
 
   attr :schedules, :list, required: true
   defp schedule(%{schedules: schedules} = assigns) do
-    day_scheds = Enum.group_by(schedules, &(&1.day_of_week))
+    assigns = assign(assigns, :day_scheds, Enum.group_by(schedules, &(&1.day_of_week)))
     ~H"""
     <div class="schedule">
       <div :for={day <- 1..7} class="day">
         <div class="dayName">{Lists.Schedule.day_name(day)}</div>
         <div class="blockList">
-          <div :for={sched <- Map.get(day_scheds, day, [])} class="block">
+          <div :for={sched <- Map.get(@day_scheds, day, [])} class="block">
             {Calendar.strftime(sched.time, "%-I:%M %p")}
+            <button
+              phx-click="delete_sched"
+              phx-value-sched-id={sched.id}
+              class="btn-danger"
+            >
+              X
+            </button>
           </div>
         </div>
       </div>
     </div>
+    """
+  end
+
+  #capture escape
+      # data-cancel={JS.exec(@on_cancel, "phx-remove")}
+      # phx-window-keydown={cancel(@id)}
+      # phx-key="escape"
+
+  attr :task_list_id, :string, required: true
+  defp schedule_picker(assigns) do
+    ~H"""
+    <dialog
+      id="scheduler"
+      class="scheduler"
+      phx-remove={JS.dispatch("hide-dialog", to: "#scheduler")}
+      phx-mounted={JS.dispatch("show-dialog", to: "#scheduler")}
+      phx-updated={JS.dispatch("show-dialog", to: "#scheduler")}
+      phx-window-keydown={JS.push("hide-scheduler")}
+      phx-key="escape"
+    >
+      <form phx-submit="create-scheds">
+        <input type="hidden" name="task_list_id" value={@task_list_id}/>
+        <div class="days">
+            <div :for={day <- 1..7} class="day">
+                <label for={"scheduler-day#{day}"}>{Lists.Schedule.day_name(day)}</label>
+                <input type="checkbox" id={"scheduler-day#{day}"} name={"day#{day}"}/>
+            </div>
+        </div>
+
+        <div class="time">
+            <label for="time-input">Time</label>
+            <input name="time-input" type="time" required/>
+        </div>
+
+        <button type="submit">Create</button>
+      </form>
+    </dialog>
     """
   end
 end

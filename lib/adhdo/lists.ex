@@ -3,20 +3,26 @@ defmodule Adhdo.Lists do
   The Lists context manages task lists and their associated tasks.
   """
 
+  import Ecto.Query
+
   alias Adhdo.Repo
   alias Adhdo.Lists.{TaskList, Task, Image, Schedule}
+
+  def schedules_query, do: from(s in Schedule, order_by: [asc: s.day_of_week, asc: s.time])
 
   ## TaskList functions
 
   @doc """
   Returns the list of all task lists.
   Preloads tasks and schedules for each list.
+  Schedules are ordered by day of week, then by time.
   """
   def list_task_lists do
+
     TaskList
     |> Repo.all()
     |> Repo.preload(:tasks)
-    |> Repo.preload(:schedules)
+    |> Repo.preload(schedules: schedules_query())
   end
 
   @doc """
@@ -26,7 +32,7 @@ defmodule Adhdo.Lists do
   def get_task_list!(id) do
     Repo.get!(TaskList, id)
     |> Repo.preload([tasks: [:image]])
-    |> Repo.preload(:schedules)
+    |> Repo.preload(schedules: schedules_query())
   end
 
   @doc """
@@ -303,6 +309,25 @@ defmodule Adhdo.Lists do
     result
   end
 
+  def create_schedules(attrs_list) do
+    result =
+      Repo.transaction(fn ->
+        Enum.map(attrs_list, fn attrs ->
+          case %Schedule{} |> Schedule.changeset(attrs) |> Repo.insert() do
+            {:ok, schedule} -> schedule
+            {:error, changeset} -> Repo.rollback(changeset)
+          end
+        end)
+      end)
+
+    case result do
+      {:ok, _schedules} -> notify_scheduler_reload()
+      _ -> :ok
+    end
+
+    result
+  end
+
   @doc """
   Deletes a schedule.
   Notifies the scheduler to reload.
@@ -317,6 +342,8 @@ defmodule Adhdo.Lists do
 
     result
   end
+
+  def delete_schedule(schedule_id) when is_integer(schedule_id), do: delete_schedule(%Schedule{id: schedule_id})
 
   @doc """
   Deletes all schedules for a specific task list.
