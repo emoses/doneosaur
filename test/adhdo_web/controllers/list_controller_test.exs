@@ -1,7 +1,7 @@
-defmodule AdhdoWeb.ListControllerTest do
-  use AdhdoWeb.ConnCase
+defmodule DoneosaurWeb.ListControllerTest do
+  use DoneosaurWeb.ConnCase
 
-  alias Adhdo.{Lists, Sessions}
+  alias Doneosaur.{Lists, Sessions}
 
   describe "POST /api/lists/activate" do
     test "activates a task list by name", %{conn: conn} do

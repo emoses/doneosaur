@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Adhdo is a Phoenix 1.8 web application for managing recurring task lists, designed specifically for children with ADHD. The application displays task lists (e.g., morning routine, bedtime, after school) on full-screen tablet displays with real-time synchronization across devices viewing the same list. Uses SQLite for data persistence.
+Doneosaur is a Phoenix 1.8 web application for managing recurring task lists. The application displays task lists (e.g., morning routine, bedtime, after school) on full-screen tablet displays with real-time synchronization across devices viewing the same list. Uses SQLite for data persistence.
 
 **Key Features:**
 - Multiple recurring task lists (morning routine, bedtime, returning home, etc.)
@@ -59,12 +59,12 @@ Adhdo is a Phoenix 1.8 web application for managing recurring task lists, design
 
 The application follows standard Phoenix conventions:
 
-- **`lib/adhdo/`** - Core business logic, contexts, and Ecto schemas
+- **`lib/doneosaur/`** - Core business logic, contexts, and Ecto schemas
   - `application.ex` - OTP application that supervises: Telemetry, Repo, DNSCluster, PubSub, Endpoint
   - `repo.ex` - Ecto repository for database access
   - `mailer.ex` - Email functionality via Swoosh
 
-- **`lib/adhdo_web/`** - Web interface layer
+- **`lib/doneosaur_web/`** - Web interface layer
   - `endpoint.ex` - HTTP endpoint
   - `router.ex` - Route definitions with `:browser` and `:api` pipelines
   - `telemetry.ex` - Metrics and monitoring
@@ -72,21 +72,21 @@ The application follows standard Phoenix conventions:
   - `controllers/` - Traditional Phoenix controllers
   - `gettext.ex` - Internationalization
 
-- **`lib/adhdo_web.ex`** - Defines `use AdhdoWeb, :*` macros that set up common imports/aliases for controllers, LiveViews, components, etc.
+- **`lib/doneosaur_web.ex`** - Defines `use DoneosaurWeb, :*` macros that set up common imports/aliases for controllers, LiveViews, components, etc.
 
 ### Key Patterns
 
 **Module Naming:**
-- Web modules: `AdhdoWeb.*` (e.g., `AdhdoWeb.UserLive`, `AdhdoWeb.PageController`)
-- Business logic: `Adhdo.*` (e.g., `Adhdo.Accounts`, `Adhdo.Products`)
+- Web modules: `DoneosaurWeb.*` (e.g., `DoneosaurWeb.UserLive`, `DoneosaurWeb.PageController`)
+- Business logic: `Doneosaur.*` (e.g., `Doneosaur.Accounts`, `Doneosaur.Products`)
 
 **Router Scopes:**
-- The `:browser` pipeline scope is aliased with `AdhdoWeb`, so routes can reference modules directly
-- Example: `live "/users", UserLive` resolves to `AdhdoWeb.UserLive`
+- The `:browser` pipeline scope is aliased with `DoneosaurWeb`, so routes can reference modules directly
+- Example: `live "/users", UserLive` resolves to `DoneosaurWeb.UserLive`
 
 **Shared Imports:**
-- `AdhdoWeb.CoreComponents` is imported into all HTML contexts via `html_helpers()`
-- `AdhdoWeb.Layouts` is aliased in all HTML contexts
+- `DoneosaurWeb.CoreComponents` is imported into all HTML contexts via `html_helpers()`
+- `DoneosaurWeb.Layouts` is aliased in all HTML contexts
 - `Phoenix.LiveView.JS` is aliased for client-side interactions
 
 ### Database
@@ -166,21 +166,21 @@ This project uses **Req** (`:req` library) for all HTTP requests. Never use HTTP
 
 Organize business logic into contexts:
 
-**`Adhdo.Lists`:**
+**`Doneosaur.Lists`:**
 - Manages task lists and tasks
 - CRUD operations for lists and tasks
 - Query functions to fetch lists with tasks
 
-**`Adhdo.Displays`:**
+**`Doneosaur.Displays`:**
 - Manages display registration and assignment
 - Maps displays to their assigned task lists
 
-**`Adhdo.Sessions`:**
+**`Doneosaur.Sessions`:**
 - Manages active list sessions (which lists are currently showing)
 - Tracks task completion state for active sessions
 - Broadcasts completion events via PubSub
 
-**`Adhdo.Scheduler`:**
+**`Doneosaur.Scheduler`:**
 - Handles time-based list activation
 - Configuration for scheduled triggers
 
@@ -216,11 +216,11 @@ Organize business logic into contexts:
 **LiveView PubSub Pattern:**
 ```elixir
 # In mount/3, subscribe to the active list
-Phoenix.PubSub.subscribe(Adhdo.PubSub, "task_list:#{list_id}")
+Phoenix.PubSub.subscribe(Doneosaur.PubSub, "task_list:#{list_id}")
 
 # In handle_event for task toggle
 Phoenix.PubSub.broadcast(
-  Adhdo.PubSub,
+  Doneosaur.PubSub,
   "task_list:#{list_id}",
   {:task_toggled, task_id, checked}
 )

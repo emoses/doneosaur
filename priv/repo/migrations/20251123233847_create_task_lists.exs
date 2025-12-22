@@ -1,4 +1,4 @@
-defmodule Adhdo.Repo.Migrations.CreateTaskLists do
+defmodule Doneosaur.Repo.Migrations.CreateTaskLists do
   use Ecto.Migration
 
   def change do

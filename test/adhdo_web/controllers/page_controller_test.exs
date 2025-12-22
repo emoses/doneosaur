@@ -1,8 +1,8 @@
-defmodule AdhdoWeb.PageControllerTest do
-  use AdhdoWeb.ConnCase
+defmodule DoneosaurWeb.PageControllerTest do
+  use DoneosaurWeb.ConnCase
 
   test "GET /", %{conn: conn} do
     conn = get(conn, ~p"/")
-    assert html_response(conn, 200) =~ "Adhdo"
+    assert html_response(conn, 200) =~ "Doneosaur"
   end
 end

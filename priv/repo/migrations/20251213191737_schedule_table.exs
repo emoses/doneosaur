@@ -1,4 +1,4 @@
-defmodule Adhdo.Repo.Migrations.ScheduleTable do
+defmodule Doneosaur.Repo.Migrations.ScheduleTable do
   use Ecto.Migration
 
   def change do

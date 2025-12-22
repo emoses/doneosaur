@@ -1,9 +1,9 @@
-defmodule AdhdoWeb.ClientLiveTest do
-  use AdhdoWeb.ConnCase
+defmodule DoneosaurWeb.ClientLiveTest do
+  use DoneosaurWeb.ConnCase
 
   import Phoenix.LiveViewTest
 
-  alias Adhdo.{Lists, Sessions}
+  alias Doneosaur.{Lists, Sessions}
 
   describe "ClientLive" do
     test "renders waiting screen when no current list is set", %{conn: conn} do
@@ -90,7 +90,7 @@ defmodule AdhdoWeb.ClientLiveTest do
       {:ok, _view, _html} = live(conn, "/clients/#{client_name}")
 
       # Client should be created
-      assert {:ok, client} = Adhdo.Clients.get_or_create_client(client_name)
+      assert {:ok, client} = Doneosaur.Clients.get_or_create_client(client_name)
       assert client.name == client_name
     end
   end

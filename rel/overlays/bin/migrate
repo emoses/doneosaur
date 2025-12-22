@@ -2,4 +2,4 @@
 set -eu
 
 cd -P -- "$(dirname -- "$0")"
-exec ./adhdo eval Adhdo.Release.migrate
+exec ./doneosaur eval Doneosaur.Release.migrate

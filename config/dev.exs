@@ -1,8 +1,8 @@
 import Config
 
 # Configure your database
-config :adhdo, Adhdo.Repo,
-  database: "priv/repo/adhdo_dev.db",
+config :doneosaur, Doneosaur.Repo,
+  database: "priv/repo/doneosaur_dev.db",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
@@ -13,10 +13,11 @@ config :adhdo, Adhdo.Repo,
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we can use it
 # to bundle .js and .css sources.
-config :adhdo, AdhdoWeb.Endpoint,
+config :doneosaur, DoneosaurWeb.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
-  http: [ip: {127, 0, 0, 1}, port: String.to_integer(System.get_env("PORT") || "4000")],
+  #http: [ip: {127, 0, 0, 1}, port: String.to_integer(System.get_env("PORT") || "4000")],
+  http: [ip: {0, 0, 0, 0}, port: String.to_integer(System.get_env("PORT") || "4000")],
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
@@ -26,7 +27,7 @@ config :adhdo, AdhdoWeb.Endpoint,
            cd: Path.expand("../assets", __DIR__),
            env: [{"NODE_PATH", Path.expand(Mix.Project.build_path(), __DIR__)}],
     ],
-    # esbuild: {Esbuild, :install_and_run, [:adhdo, ~w(--sourcemap=inline --watch)]},
+    # esbuild: {Esbuild, :install_and_run, [:doneosaur, ~w(--sourcemap=inline --watch)]},
   ]
 
 # ## SSL Support
@@ -53,18 +54,18 @@ config :adhdo, AdhdoWeb.Endpoint,
 # different ports.
 
 # Watch static and templates for browser reloading.
-config :adhdo, AdhdoWeb.Endpoint,
+config :doneosaur, DoneosaurWeb.Endpoint,
   live_reload: [
     web_console_logger: true,
     patterns: [
       ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",
       ~r"priv/gettext/.*(po)$",
-      ~r"lib/adhdo_web/(?:controllers|live|components|router)/?.*\.(ex|heex)$"
+      ~r"lib/doneosaur_web/(?:controllers|live|components|router)/?.*\.(ex|heex)$"
     ]
   ]
 
 # Enable dev routes for dashboard and mailbox
-config :adhdo, dev_routes: true
+config :doneosaur, dev_routes: true
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :default_formatter, format: "[$level] $message\n"

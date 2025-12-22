@@ -1,4 +1,4 @@
-defmodule Adhdo.Repo.Migrations.CreateClients do
+defmodule Doneosaur.Repo.Migrations.CreateClients do
   use Ecto.Migration
 
   def change do

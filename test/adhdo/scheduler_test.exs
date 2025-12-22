@@ -1,8 +1,8 @@
-defmodule Adhdo.SchedulerTest do
+defmodule Doneosaur.SchedulerTest do
   use ExUnit.Case, async: true
 
-  alias Adhdo.Scheduler
-  alias Adhdo.Lists.Schedule
+  alias Doneosaur.Scheduler
+  alias Doneosaur.Lists.Schedule
 
   # Helper to create a schedule struct
   defp make_schedule(day_of_week, time_string, task_list_id \\ 1) do

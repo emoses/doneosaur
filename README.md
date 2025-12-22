@@ -1,4 +1,4 @@
-# Adhdo
+# Doneosaur
 
 To start your Phoenix server:
 

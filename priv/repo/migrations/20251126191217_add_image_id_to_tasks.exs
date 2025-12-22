@@ -1,4 +1,4 @@
-defmodule Adhdo.Repo.Migrations.AddImageIdToTasks do
+defmodule Doneosaur.Repo.Migrations.AddImageIdToTasks do
   use Ecto.Migration
 
   def change do

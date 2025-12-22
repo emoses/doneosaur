@@ -1,7 +1,7 @@
-defmodule Adhdo.ListsTest do
-  use Adhdo.DataCase
+defmodule Doneosaur.ListsTest do
+  use Doneosaur.DataCase
 
-  alias Adhdo.Lists
+  alias Doneosaur.Lists
 
   describe "update_task_list_and_tasks/3" do
     test "updates task list, reorders tasks, adds new tasks, and deletes removed tasks" do

@@ -1,6 +1,6 @@
 {
-  "name": "Adhdo",
-  "short_name": "Adhdo",
+  "name": "Done-o-saur",
+  "short_name": "Done-o-saur",
   "description": "Task Manager for kids",
   "start_url": "/",
   "display": "standalone",

@@ -1,7 +1,7 @@
-defmodule Adhdo.SessionsTest do
-  use Adhdo.DataCase
+defmodule Doneosaur.SessionsTest do
+  use Doneosaur.DataCase
 
-  alias Adhdo.{Sessions, Lists}
+  alias Doneosaur.{Sessions, Lists}
 
   describe "determine_default_list/0" do
     test "returns 'Morning Routine' list ID when it exists" do

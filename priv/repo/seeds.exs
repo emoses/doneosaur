@@ -5,16 +5,16 @@
 # Inside the script, you can read and write to any of your
 # repositories directly:
 #
-#     Adhdo.Repo.insert!(%Adhdo.SomeSchema{})
+#     Doneosaur.Repo.insert!(%Doneosaur.SomeSchema{})
 #
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
 
-alias Adhdo.Lists
+alias Doneosaur.Lists
 
 # Clear existing data
-Adhdo.Repo.delete_all(Adhdo.Lists.Task)
-Adhdo.Repo.delete_all(Adhdo.Lists.TaskList)
+Doneosaur.Repo.delete_all(Doneosaur.Lists.Task)
+Doneosaur.Repo.delete_all(Doneosaur.Lists.TaskList)
 
 # Morning Routine - Weekday
 {:ok, _morning} =
@@ -126,5 +126,5 @@ Adhdo.Repo.delete_all(Adhdo.Lists.TaskList)
     ]
   })
 
-IO.puts("Seeded #{Adhdo.Repo.aggregate(Adhdo.Lists.TaskList, :count)} task lists")
-IO.puts("Seeded #{Adhdo.Repo.aggregate(Adhdo.Lists.Task, :count)} tasks")
+IO.puts("Seeded #{Doneosaur.Repo.aggregate(Doneosaur.Lists.TaskList, :count)} task lists")
+IO.puts("Seeded #{Doneosaur.Repo.aggregate(Doneosaur.Lists.Task, :count)} tasks")

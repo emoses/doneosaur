@@ -3,7 +3,7 @@
 
 @source "../css";
 @source "../js";
-@source "../../lib/adhdo_web";
+@source "../../lib/doneosaur_web";
 
 /* Add variants based on LiveView classes */
 @custom-variant phx-click-loading (.phx-click-loading&, .phx-click-loading &);

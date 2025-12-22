@@ -2,4 +2,4 @@
 set -eu
 
 cd -P -- "$(dirname -- "$0")"
-exec ./adhdo eval Adhdo.Release.create_database
+exec ./doneosaur eval Doneosaur.Release.create_database

@@ -7,20 +7,20 @@
 # General application configuration
 import Config
 
-config :adhdo,
-  ecto_repos: [Adhdo.Repo],
+config :doneosaur,
+  ecto_repos: [Doneosaur.Repo],
   generators: [timestamp_type: :utc_datetime],
   timezone: System.get_env("TZ") || "America/Los_Angeles"
 
 # Configures the endpoint
-config :adhdo, AdhdoWeb.Endpoint,
+config :doneosaur, DoneosaurWeb.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
   render_errors: [
-    formats: [html: AdhdoWeb.ErrorHTML, json: AdhdoWeb.ErrorJSON],
+    formats: [html: DoneosaurWeb.ErrorHTML, json: DoneosaurWeb.ErrorJSON],
     layout: false
   ],
-  pubsub_server: Adhdo.PubSub,
+  pubsub_server: Doneosaur.PubSub,
   live_view: [signing_salt: "+7B9Awua"]
 
 # Configures the mailer
@@ -30,7 +30,7 @@ config :adhdo, AdhdoWeb.Endpoint,
 #
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
-config :adhdo, Adhdo.Mailer, adapter: Swoosh.Adapters.Local
+config :doneosaur, Doneosaur.Mailer, adapter: Swoosh.Adapters.Local
 
 # Configures Elixir's Logger
 config :logger, :default_formatter,

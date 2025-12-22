@@ -22,13 +22,13 @@ import "phoenix_html"
 // Establish Phoenix Socket and LiveView configuration.
 import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
-import {hooks as colocatedHooks} from "phoenix-colocated/adhdo"
+import {hooks as colocatedHooks} from "phoenix-colocated/doneosaur"
 import topbar from "../vendor/topbar"
 
 // Client storage hook for persisting client name
 const ClientStorage = {
   mounted() {
-    const clientName = localStorage.getItem("adhdo_client_name")
+    const clientName = localStorage.getItem("doneosaur_client_name")
     if (clientName) {
       this.pushEvent("client_name_loaded", {name: clientName})
     }
@@ -36,7 +36,7 @@ const ClientStorage = {
   updated() {
     const clientName = this.el.dataset.clientName
     if (clientName) {
-      localStorage.setItem("adhdo_client_name", clientName)
+      localStorage.setItem("doneosaur_client_name", clientName)
     }
   }
 }
