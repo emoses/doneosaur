@@ -77,11 +77,9 @@ defmodule AdhdoWeb.Admin.IndexLive do
 
     case Lists.delete_schedule(sched) do
       {:ok, _} ->
-        newlist = Lists.get_task_list!(sched.task_list_id)
-        index = Enum.find_index(socket.assigns.task_lists, fn l -> l.id == sched.task_list_id end)
         {:noreply,
           socket
-          |> assign(:task_lists, List.replace_at(socket.assigns.task_lists, index, newlist))}
+          |> assign(:task_lists, reload_task_list!(socket.assigns.task_lists, sched.task_list_id))}
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to delete sched")}
     end
@@ -89,6 +87,7 @@ defmodule AdhdoWeb.Admin.IndexLive do
 
   @impl true
   def handle_event("create-scheds", vals, socket) do
+    # create-scheds will receive a map like this
     # %{
     #   "day2" => "on",
     #   "day5" => "on",
@@ -111,15 +110,22 @@ defmodule AdhdoWeb.Admin.IndexLive do
     case Lists.create_schedules(attrs) do
       {:ok, _} ->
         task_list_id = String.to_integer(vals["task_list_id"])
-        newlist = Lists.get_task_list!(task_list_id)
-        index = Enum.find_index(socket.assigns.task_lists, fn l -> l.id == task_list_id end)
         {:noreply,
           socket
-          |> assign(:task_lists, List.replace_at(socket.assigns.task_lists, index, newlist))
+          |> assign(:task_lists, reload_task_list!(socket.assigns.task_lists, task_list_id))
           |> assign(:sched_task_list, nil)
         }
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to create new sched")}
+    end
+  end
+
+  defp reload_task_list!(task_lists, id) do
+    case Enum.find_index(task_lists, fn l -> l.id == id end) do
+      nil -> raise "List with id #{id} not found"
+      i ->
+        newlist = Lists.get_task_list!(id)
+        List.replace_at(task_lists, i, newlist)
     end
   end
 
@@ -192,7 +198,9 @@ defmodule AdhdoWeb.Admin.IndexLive do
         </div>
       <% end %>
     </div>
-    <.schedule_picker :if={@sched_task_list} task_list_id={@sched_task_list}/>
+    <.schedule_picker :if={@sched_task_list}
+      task_list_id={@sched_task_list}
+      title={Enum.find(@task_lists, fn t -> t.id == @sched_task_list end) |> Map.get(:name)} />
     """
   end
 
@@ -209,9 +217,9 @@ defmodule AdhdoWeb.Admin.IndexLive do
             <button
               phx-click="delete_sched"
               phx-value-sched-id={sched.id}
-              class="btn-danger"
+              class="sched-delete"
             >
-              X
+              ×
             </button>
           </div>
         </div>
@@ -220,12 +228,8 @@ defmodule AdhdoWeb.Admin.IndexLive do
     """
   end
 
-  #capture escape
-      # data-cancel={JS.exec(@on_cancel, "phx-remove")}
-      # phx-window-keydown={cancel(@id)}
-      # phx-key="escape"
-
   attr :task_list_id, :string, required: true
+  attr :title, :string
   defp schedule_picker(assigns) do
     ~H"""
     <dialog
@@ -237,7 +241,16 @@ defmodule AdhdoWeb.Admin.IndexLive do
       phx-window-keydown={JS.push("hide-scheduler")}
       phx-key="escape"
     >
+      <button
+        type="button"
+        class="close-button"
+        phx-click={JS.push("hide-scheduler")}
+        aria-label="Close"
+      >
+        ×
+      </button>
       <form phx-submit="create-scheds">
+        <h1 :if={@title}>Add schedule for {@title}</h1>
         <input type="hidden" name="task_list_id" value={@task_list_id}/>
         <div class="days">
             <div :for={day <- 1..7} class="day">
@@ -251,7 +264,16 @@ defmodule AdhdoWeb.Admin.IndexLive do
             <input name="time-input" type="time" required/>
         </div>
 
-        <button type="submit">Create</button>
+        <div class="button-group">
+          <button type="submit" class="btn-submit">Create</button>
+          <button
+            type="button"
+            class="btn-cancel"
+            phx-click={JS.push("hide-scheduler")}
+          >
+            Cancel
+          </button>
+        </div>
       </form>
     </dialog>
     """
