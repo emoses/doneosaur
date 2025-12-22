@@ -28,14 +28,12 @@ defmodule DoneosaurWeb.TaskListDisplay do
       </audio>
       <script>
         window.addEventListener('doneosaur:task_toggled', (e) => {
-          const checkbox = e.target.querySelector('.task-checkbox');
-          // Optimistic: if the task is *not* checked, we're gonna check it when the
-          // toggle returns, so play the sound
+          // Optimistic: play the sound if checked is *false*, because we're about to check it
           if (e.detail && e.detail.remaining <= 1) {
             const audio = document.getElementById('success-sound');
             audio.currentTime = 0;
             audio.play().catch(err => console.debug('Audio play prevented:', err));
-          } else if (!checkbox.checked) {
+          } else if (!e.detail.checked) {
             const audio = document.getElementById('task-sound');
             audio.currentTime = 0;
             audio.play().catch(err => console.debug('Audio play prevented:', err));
@@ -67,7 +65,10 @@ defmodule DoneosaurWeb.TaskListDisplay do
             :for={task <- @task_list.tasks}
             class={"task-item #{if MapSet.member?(@completed_tasks, task.id), do: "completed", else: ""}"}
             phx-click={
-              JS.dispatch("doneosaur:task_toggled", detail: %{remaining: length(@task_list.tasks) - MapSet.size(@completed_tasks)})
+              JS.dispatch("doneosaur:task_toggled", detail: %{
+                remaining: length(@task_list.tasks) - MapSet.size(@completed_tasks),
+                checked: MapSet.member?(@completed_tasks, task.id),
+              })
               |> JS.push("toggle_task", value: %{"task-id": task.id})
             }
             >
