@@ -122,7 +122,12 @@ defmodule DoneosaurWeb.TaskListDisplay do
 
   def waiting_screen(assigns) do
     ~H"""
-    <div class="waiting-container">
+    <div class="container waiting">
+      <header>
+        <div class="left-controls">
+          <a href="/admin">⚙</a>
+        </div>
+      </header>
       <p class="waiting-message">{@message}</p>
       <p :if={@subtitle} class="waiting-subtitle">{@subtitle}</p>
     </div>

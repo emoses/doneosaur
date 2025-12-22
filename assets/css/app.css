@@ -57,6 +57,7 @@ header {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
+    width: 100%;
 }
 
 header .left-controls {
@@ -273,15 +274,9 @@ header .controls {
 }
 
 /* Waiting screen */
-.waiting-container {
-    height: 100vh;
-    width: 100vw;
-    background: linear-gradient(135deg, #e0f2fe 0%, #ddd6fe 100%);
-    display: flex;
-    flex-direction: column;
+.container.waiting {
     align-items: center;
     justify-content: center;
-    padding: 4vh;
 }
 
 .waiting-message {
