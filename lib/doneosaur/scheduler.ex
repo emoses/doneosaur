@@ -117,7 +117,7 @@ defmodule Doneosaur.Scheduler do
     {:ok, target_datetime} = DateTime.new(Date.add(now, diff), schedule.time, get_timezone())
 
     ms_until = DateTime.diff(target_datetime, now, :millisecond)
-  t max(ms_until, 0)
+    max(ms_until, 0)
   end
 
   defp is_before?(t, schedule) do
