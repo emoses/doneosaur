@@ -139,7 +139,7 @@ defmodule DoneosaurWeb.HomeLive do
         <a class="btn btn-secondary" href="/admin">⚙ Admin</a>
       </nav>
       <main>
-        <h1 class="title">Doneosaur</h1>
+        <h1 class="title">Done-o-saur</h1>
 
         <div :if={@show_registration} class="registration-card">
             <form phx-submit="register_client">
