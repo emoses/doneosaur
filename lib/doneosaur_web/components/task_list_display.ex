@@ -90,13 +90,9 @@ defmodule DoneosaurWeb.TaskListDisplay do
     """
   end
 
-  @doc """
-  Renders an "all done" message.
-  """
   slot :inner_block, required: true
   attr :img_url, :string, default: nil
-
-  def complete(assigns) do
+  defp complete(assigns) do
     ~H"""
     <div class="complete" id="complete" phx-hook=".PlayComplete">
       <img :if={@img_url} src={@img_url} />
@@ -105,9 +101,15 @@ defmodule DoneosaurWeb.TaskListDisplay do
     <script :type={Phoenix.LiveView.ColocatedHook} name=".PlayComplete">
       export default {
         mounted() {
-            const audio = document.getElementById('success-sound');
-            audio.currentTime = 0;
-            audio.play().catch(err => console.debug('Audio play prevented:', err));
+            this.audio = document.getElementById('success-sound');
+            this.audio.currentTime = 0;
+            this.audio.play().catch(err => console.debug('Audio play prevented:', err));
+        },
+
+        destroyed() {
+           if (this.audio) {
+              this.audio.pause();
+           }
         }
       };
     </script>

@@ -162,6 +162,46 @@ defmodule Doneosaur.Lists do
     end)
   end
 
+  @doc """
+  Clones a task list with a new name.
+  Copies all tasks with their text, order, and image associations.
+  Does not copy schedules.
+  """
+  def clone_task_list(task_list, new_name) do
+    task_list = task_list |> Repo.preload(:tasks)
+
+    Repo.transaction(fn ->
+      # Create new task list with new name
+      list_attrs = %{
+        name: new_name,
+        description: task_list.description
+      }
+
+      with {:ok, new_list} <- create_task_list(list_attrs) do
+        # Copy all tasks
+        tasks =
+          task_list.tasks
+          |> Enum.map(fn task ->
+            task_attrs = %{
+              text: task.text,
+              order: task.order,
+              image_id: task.image_id,
+              task_list_id: new_list.id
+            }
+
+            case create_task(task_attrs) do
+              {:ok, new_task} -> new_task
+              {:error, changeset} -> Repo.rollback(changeset)
+            end
+          end)
+
+        %{new_list | tasks: tasks}
+      else
+        {:error, changeset} -> Repo.rollback(changeset)
+      end
+    end)
+  end
+
   def update_task_list_and_tasks(task_list, attrs, task_attrs) do
     import Ecto.Query
 

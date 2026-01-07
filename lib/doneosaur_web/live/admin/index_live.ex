@@ -12,7 +12,8 @@ defmodule DoneosaurWeb.Admin.IndexLive do
      socket
      |> assign(:task_lists, task_lists)
      |> assign(:current_list_id, current_list_id)
-     |> assign(:sched_task_list, nil)}
+     |> assign(:sched_task_list, nil)
+     |> assign(:clone_list_id, nil)}
   end
 
   @impl true
@@ -39,6 +40,37 @@ defmodule DoneosaurWeb.Admin.IndexLive do
     {:noreply,
      socket
      |> assign(:sched_task_list, nil)}
+  end
+
+  @impl true
+  def handle_event("show_clone_dialog", %{"list-id" => list_id}, socket) do
+    list_id = String.to_integer(list_id)
+    {:noreply, assign(socket, :clone_list_id, list_id)}
+  end
+
+  @impl true
+  def handle_event("hide_clone_dialog", _, socket) do
+    {:noreply, assign(socket, :clone_list_id, nil)}
+  end
+
+  @impl true
+  def handle_event("clone_list", %{"new_name" => new_name}, socket) do
+    clone_list_id = socket.assigns.clone_list_id
+    original_list = Lists.get_task_list!(clone_list_id)
+
+    case Lists.clone_task_list(original_list, new_name) do
+      {:ok, _new_list} ->
+        task_lists = Lists.list_task_lists()
+
+        {:noreply,
+         socket
+         |> assign(:task_lists, task_lists)
+         |> assign(:clone_list_id, nil)
+         |> put_flash(:info, "Task list cloned successfully")}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Failed to clone task list")}
+    end
   end
 
   @impl true
@@ -182,6 +214,13 @@ defmodule DoneosaurWeb.Admin.IndexLive do
                   Schedule
                 </button>
                 <button
+                  phx-click="show_clone_dialog"
+                  phx-value-list-id={list.id}
+                  class="btn btn-secondary"
+                >
+                  Clone
+                </button>
+                <button
                   phx-click="delete_list"
                   phx-value-list-id={list.id}
                   data-confirm="Are you sure you want to delete this task list?"
@@ -200,6 +239,8 @@ defmodule DoneosaurWeb.Admin.IndexLive do
     <.schedule_picker :if={@sched_task_list}
       task_list_id={@sched_task_list}
       title={Enum.find(@task_lists, fn t -> t.id == @sched_task_list end) |> Map.get(:name)} />
+    <.clone_picker :if={@clone_list_id}
+      list_name={Enum.find(@task_lists, fn t -> t.id == @clone_list_id end) |> Map.get(:name)} />
     """
   end
 
@@ -269,6 +310,58 @@ defmodule DoneosaurWeb.Admin.IndexLive do
             type="button"
             class="btn-cancel"
             phx-click={JS.push("hide-scheduler")}
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </dialog>
+    """
+  end
+
+  attr :list_name, :string, required: true
+  defp clone_picker(assigns) do
+    ~H"""
+    <dialog
+      id="clone-dialog"
+      class="scheduler"
+      phx-remove={JS.dispatch("hide-dialog", to: "#clone-dialog")}
+      phx-mounted={JS.dispatch("show-dialog", to: "#clone-dialog")}
+      phx-updated={JS.dispatch("show-dialog", to: "#clone-dialog")}
+      phx-window-keydown={JS.push("hide_clone_dialog")}
+      phx-key="escape"
+    >
+      <button
+        type="button"
+        class="close-button"
+        phx-click={JS.push("hide_clone_dialog")}
+        aria-label="Close"
+      >
+        ×
+      </button>
+      <h1>Clone Task List</h1>
+      <form phx-submit="clone_list">
+        <div class="form-group">
+          <label for="new_name" class="form-label">
+            New Name for Copy of "{@list_name}"
+          </label>
+          <input
+            type="text"
+            name="new_name"
+            id="new_name"
+            class="form-input"
+            required
+            autofocus
+            value={"Copy of #{@list_name}"}
+          />
+        </div>
+
+        <div class="button-group">
+          <button type="submit" class="btn-submit">Clone</button>
+          <button
+            type="button"
+            class="btn-cancel"
+            phx-click={JS.push("hide_clone_dialog")}
           >
             Cancel
           </button>
