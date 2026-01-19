@@ -17,8 +17,7 @@ defmodule DoneosaurWeb.Router do
   scope "/", DoneosaurWeb do
     pipe_through :browser
 
-    live "/", HomeLive
-    live "/clients/:name", ClientLive
+    live "/", ClientLive
     live "/lists/:id", TaskListLive
   end
 

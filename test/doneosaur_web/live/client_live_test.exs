@@ -10,10 +10,10 @@ defmodule DoneosaurWeb.ClientLiveTest do
       # Ensure there's no current list
       Sessions.set_current_list(nil)
 
-      {:ok, _view, html} = live(conn, "/clients/test-client")
+      {:ok, _view, html} = live(conn, "/")
 
-      # Should show waiting screen with client name
-      assert html =~ "Hi test-client!"
+      # Should show waiting screen
+      assert html =~ "Hi!"
       assert html =~ "Waiting for a task list..."
 
       # Should not show task list
@@ -35,7 +35,7 @@ defmodule DoneosaurWeb.ClientLiveTest do
       # Set it as current list
       Sessions.set_current_list(task_list.id)
 
-      {:ok, _view, html} = live(conn, "/clients/test-client")
+      {:ok, _view, html} = live(conn, "/")
 
       # Should show task list
       assert html =~ "Morning Routine"
@@ -63,7 +63,7 @@ defmodule DoneosaurWeb.ClientLiveTest do
       # Set first list as current
       Sessions.set_current_list(task_list1.id)
 
-      {:ok, view, html} = live(conn, "/clients/test-client")
+      {:ok, view, html} = live(conn, "/")
 
       # Should show first list
       assert html =~ "Morning Routine"
@@ -79,19 +79,6 @@ defmodule DoneosaurWeb.ClientLiveTest do
       assert html =~ "Bedtime Routine"
       assert html =~ "Put on pajamas"
       refute html =~ "Morning Routine"
-    end
-
-    test "creates client record when mounting", %{conn: conn} do
-      # Ensure no current list so mount doesn't try to load one
-      Sessions.set_current_list(nil)
-
-      client_name = "new-client-#{System.unique_integer([:positive])}"
-
-      {:ok, _view, _html} = live(conn, "/clients/#{client_name}")
-
-      # Client should be created
-      assert {:ok, client} = Doneosaur.Clients.get_or_create_client(client_name)
-      assert client.name == client_name
     end
   end
 end

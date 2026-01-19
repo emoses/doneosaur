@@ -20,7 +20,7 @@ defmodule Doneosaur.Sessions do
     default_list_id = determine_default_list()
 
     Agent.start_link(
-      fn -> %{current_list: default_list_id, clients: %{}} end,
+      fn -> %{current_list: default_list_id} end,
       name: @client_registry_name
     )
   end

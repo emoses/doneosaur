@@ -1,14 +1,11 @@
 defmodule DoneosaurWeb.ClientLive do
   use DoneosaurWeb, :live_view
 
-  alias Doneosaur.{Clients, Sessions}
+  alias Doneosaur.{Sessions}
   alias DoneosaurWeb.{TaskListHelpers, TaskListDisplay}
 
   @impl true
-  def mount(%{"name" => client_name}, _session, socket) do
-    # Ensure client exists
-    {:ok, _client} = Clients.get_or_create_client(client_name)
-
+  def mount(_params, _session, socket) do
     # Subscribe to current list changes
     if connected?(socket) do
       Phoenix.PubSub.subscribe(Doneosaur.PubSub, "current_list")
@@ -18,7 +15,6 @@ defmodule DoneosaurWeb.ClientLive do
 
     socket =
       socket
-      |> assign(:client_name, client_name)
       |> TaskListHelpers.init_task_list(list_id)
 
     {:ok, socket}
@@ -64,7 +60,7 @@ defmodule DoneosaurWeb.ClientLive do
       <TaskListDisplay.task_list task_list={@task_list} completed_tasks={@completed_tasks} />
     <% else %>
       <TaskListDisplay.waiting_screen
-        message={"Hi #{@client_name}! 👋"}
+        message={"Hi! 👋"}
         subtitle="Waiting for a task list..."
       />
     <% end %>
