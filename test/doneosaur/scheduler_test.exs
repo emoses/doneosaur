@@ -7,6 +7,7 @@ defmodule Doneosaur.SchedulerTest do
   # Helper to create a schedule struct
   defp make_schedule(day_of_week, time_string, task_list_id \\ 1) do
     {:ok, time} = Time.from_iso8601(time_string)
+
     %Schedule{
       day_of_week: day_of_week,
       time: time,
@@ -18,9 +19,12 @@ defmodule Doneosaur.SchedulerTest do
   describe "find_next_schedule/2" do
     test "returns first schedule when current time is before all schedules" do
       schedules = [
-        make_schedule(2, "09:00:00"),  # Tuesday 9am
-        make_schedule(4, "14:00:00"),  # Thursday 2pm
-        make_schedule(6, "10:00:00")   # Saturday 10am
+        # Tuesday 9am
+        make_schedule(2, "09:00:00"),
+        # Thursday 2pm
+        make_schedule(4, "14:00:00"),
+        # Saturday 10am
+        make_schedule(6, "10:00:00")
       ]
 
       # Monday at 8am - before first schedule
@@ -34,9 +38,12 @@ defmodule Doneosaur.SchedulerTest do
 
     test "returns first schedule when current time is after all schedules (wraps to next week)" do
       schedules = [
-        make_schedule(1, "07:30:00"),  # Monday 7:30am
-        make_schedule(3, "08:00:00"),  # Wednesday 8am
-        make_schedule(5, "16:00:00")   # Friday 4pm
+        # Monday 7:30am
+        make_schedule(1, "07:30:00"),
+        # Wednesday 8am
+        make_schedule(3, "08:00:00"),
+        # Friday 4pm
+        make_schedule(5, "16:00:00")
       ]
 
       # Saturday at 5pm - after last schedule
@@ -50,11 +57,16 @@ defmodule Doneosaur.SchedulerTest do
 
     test "returns next schedule when current time is in the middle of schedules" do
       schedules = [
-        make_schedule(1, "07:30:00"),  # Monday 7:30am
-        make_schedule(2, "07:30:00"),  # Tuesday 7:30am
-        make_schedule(3, "07:30:00"),  # Wednesday 7:30am
-        make_schedule(4, "07:30:00"),  # Thursday 7:30am
-        make_schedule(5, "07:30:00")   # Friday 7:30am
+        # Monday 7:30am
+        make_schedule(1, "07:30:00"),
+        # Tuesday 7:30am
+        make_schedule(2, "07:30:00"),
+        # Wednesday 7:30am
+        make_schedule(3, "07:30:00"),
+        # Thursday 7:30am
+        make_schedule(4, "07:30:00"),
+        # Friday 7:30am
+        make_schedule(5, "07:30:00")
       ]
 
       # Tuesday at 8am - should get Wednesday
@@ -68,9 +80,12 @@ defmodule Doneosaur.SchedulerTest do
 
     test "returns next schedule on same day when time hasn't passed yet" do
       schedules = [
-        make_schedule(1, "07:30:00"),  # Monday 7:30am
-        make_schedule(1, "12:00:00"),  # Monday 12pm
-        make_schedule(1, "17:00:00")   # Monday 5pm
+        # Monday 7:30am
+        make_schedule(1, "07:30:00"),
+        # Monday 12pm
+        make_schedule(1, "12:00:00"),
+        # Monday 5pm
+        make_schedule(1, "17:00:00")
       ]
 
       # Monday at 8am - should get Monday 12pm
@@ -84,9 +99,12 @@ defmodule Doneosaur.SchedulerTest do
 
     test "returns next day's schedule when on same day but after all times" do
       schedules = [
-        make_schedule(1, "07:30:00"),  # Monday 7:30am
-        make_schedule(1, "12:00:00"),  # Monday 12pm
-        make_schedule(2, "07:30:00")   # Tuesday 7:30am
+        # Monday 7:30am
+        make_schedule(1, "07:30:00"),
+        # Monday 12pm
+        make_schedule(1, "12:00:00"),
+        # Tuesday 7:30am
+        make_schedule(2, "07:30:00")
       ]
 
       # Monday at 1pm - should get Tuesday
@@ -100,13 +118,20 @@ defmodule Doneosaur.SchedulerTest do
 
     test "handles schedules spanning full week correctly" do
       schedules = [
-        make_schedule(1, "09:00:00"),  # Monday 9am
-        make_schedule(2, "09:00:00"),  # Tuesday 9am
-        make_schedule(3, "09:00:00"),  # Wednesday 9am
-        make_schedule(4, "09:00:00"),  # Thursday 9am
-        make_schedule(5, "09:00:00"),  # Friday 9am
-        make_schedule(6, "10:00:00"),  # Saturday 10am
-        make_schedule(7, "11:00:00")   # Sunday 11am
+        # Monday 9am
+        make_schedule(1, "09:00:00"),
+        # Tuesday 9am
+        make_schedule(2, "09:00:00"),
+        # Wednesday 9am
+        make_schedule(3, "09:00:00"),
+        # Thursday 9am
+        make_schedule(4, "09:00:00"),
+        # Friday 9am
+        make_schedule(5, "09:00:00"),
+        # Saturday 10am
+        make_schedule(6, "10:00:00"),
+        # Sunday 11am
+        make_schedule(7, "11:00:00")
       ]
 
       # Sunday at noon - should wrap to Monday
@@ -142,9 +167,199 @@ defmodule Doneosaur.SchedulerTest do
     end
   end
 
+  describe "find_most_recent_schedule/2" do
+    test "returns last schedule when current time is after all schedules" do
+      schedules = [
+        # Monday 7:30am
+        make_schedule(1, "07:30:00"),
+        # Wednesday 8am
+        make_schedule(3, "08:00:00"),
+        # Friday 4pm
+        make_schedule(5, "16:00:00")
+      ]
+
+      # Saturday at 5pm - after last schedule
+      {:ok, current_time} = DateTime.from_naive(~N[2024-01-06 17:00:00], "Etc/UTC")
+
+      result = Scheduler.find_most_recent_schedule(schedules, current_time)
+
+      assert result.day_of_week == 5
+      assert result.time == ~T[16:00:00]
+    end
+
+    test "returns last schedule when current time is before all schedules (wraps to previous week)" do
+      schedules = [
+        # Tuesday 9am
+        make_schedule(2, "09:00:00"),
+        # Thursday 2pm
+        make_schedule(4, "14:00:00"),
+        # Saturday 10am
+        make_schedule(6, "10:00:00")
+      ]
+
+      # Monday at 8am - before first schedule
+      {:ok, current_time} = DateTime.from_naive(~N[2024-01-01 08:00:00], "Etc/UTC")
+
+      result = Scheduler.find_most_recent_schedule(schedules, current_time)
+
+      assert result.day_of_week == 6
+      assert result.time == ~T[10:00:00]
+    end
+
+    test "returns most recent schedule when current time is in the middle of schedules" do
+      schedules = [
+        # Monday 7:30am
+        make_schedule(1, "07:30:00"),
+        # Tuesday 7:30am
+        make_schedule(2, "07:30:00"),
+        # Wednesday 7:30am
+        make_schedule(3, "07:30:00"),
+        # Thursday 7:30am
+        make_schedule(4, "07:30:00"),
+        # Friday 7:30am
+        make_schedule(5, "07:30:00")
+      ]
+
+      # Tuesday at 8am - should get Tuesday (already passed)
+      {:ok, current_time} = DateTime.from_naive(~N[2024-01-02 08:00:00], "Etc/UTC")
+
+      result = Scheduler.find_most_recent_schedule(schedules, current_time)
+
+      assert result.day_of_week == 2
+      assert result.time == ~T[07:30:00]
+    end
+
+    test "returns most recent schedule on same day when time has passed" do
+      schedules = [
+        # Monday 7:30am
+        make_schedule(1, "07:30:00"),
+        # Monday 12pm
+        make_schedule(1, "12:00:00"),
+        # Monday 5pm
+        make_schedule(1, "17:00:00")
+      ]
+
+      # Monday at 2pm - should get Monday 12pm
+      {:ok, current_time} = DateTime.from_naive(~N[2024-01-01 14:00:00], "Etc/UTC")
+
+      result = Scheduler.find_most_recent_schedule(schedules, current_time)
+
+      assert result.day_of_week == 1
+      assert result.time == ~T[12:00:00]
+    end
+
+    test "returns previous day's schedule when on same day but before all times" do
+      schedules = [
+        # Monday 7:30am
+        make_schedule(1, "07:30:00"),
+        # Monday 12pm
+        make_schedule(1, "12:00:00"),
+        # Tuesday 7:30am
+        make_schedule(2, "07:30:00")
+      ]
+
+      # Monday at 6am - should get previous week's Tuesday
+      {:ok, current_time} = DateTime.from_naive(~N[2024-01-01 06:00:00], "Etc/UTC")
+
+      result = Scheduler.find_most_recent_schedule(schedules, current_time)
+
+      assert result.day_of_week == 2
+      assert result.time == ~T[07:30:00]
+    end
+
+    test "handles schedules spanning full week correctly" do
+      schedules = [
+        # Monday 9am
+        make_schedule(1, "09:00:00"),
+        # Tuesday 9am
+        make_schedule(2, "09:00:00"),
+        # Wednesday 9am
+        make_schedule(3, "09:00:00"),
+        # Thursday 9am
+        make_schedule(4, "09:00:00"),
+        # Friday 9am
+        make_schedule(5, "09:00:00"),
+        # Saturday 10am
+        make_schedule(6, "10:00:00"),
+        # Sunday 11am
+        make_schedule(7, "11:00:00")
+      ]
+
+      # Monday at 8am - should wrap to previous Sunday
+      {:ok, current_time} = DateTime.from_naive(~N[2024-01-01 08:00:00], "Etc/UTC")
+
+      result = Scheduler.find_most_recent_schedule(schedules, current_time)
+
+      assert result.day_of_week == 7
+      assert result.time == ~T[11:00:00]
+    end
+
+    test "returns nil when schedules list is empty" do
+      {:ok, current_time} = DateTime.from_naive(~N[2024-01-01 12:00:00], "Etc/UTC")
+
+      result = Scheduler.find_most_recent_schedule([], current_time)
+
+      assert result == nil
+    end
+
+    test "handles edge case at exact schedule time" do
+      schedules = [
+        make_schedule(1, "09:00:00"),
+        make_schedule(2, "09:00:00")
+      ]
+
+      # Exactly Monday at 9am - should get previous week's Tuesday
+      {:ok, current_time} = DateTime.from_naive(~N[2024-01-01 09:00:00], "Etc/UTC")
+
+      result = Scheduler.find_most_recent_schedule(schedules, current_time)
+
+      assert result.day_of_week == 2
+      assert result.time == ~T[09:00:00]
+    end
+
+    test "returns most recent when multiple schedules on same day" do
+      schedules = [
+        # Monday 6am
+        make_schedule(1, "06:00:00"),
+        # Monday 9am
+        make_schedule(1, "09:00:00"),
+        # Monday 12pm
+        make_schedule(1, "12:00:00"),
+        # Monday 3pm
+        make_schedule(1, "15:00:00")
+      ]
+
+      # Monday at 1pm - should get Monday 12pm
+      {:ok, current_time} = DateTime.from_naive(~N[2024-01-01 13:00:00], "Etc/UTC")
+
+      result = Scheduler.find_most_recent_schedule(schedules, current_time)
+
+      assert result.day_of_week == 1
+      assert result.time == ~T[12:00:00]
+    end
+
+    test "handles week wrap from Monday to previous Friday" do
+      schedules = [
+        # Monday 9am
+        make_schedule(1, "09:00:00"),
+        # Friday 5pm
+        make_schedule(5, "17:00:00")
+      ]
+
+      # Monday at 8am - should get previous Friday
+      {:ok, current_time} = DateTime.from_naive(~N[2024-01-01 08:00:00], "Etc/UTC")
+
+      result = Scheduler.find_most_recent_schedule(schedules, current_time)
+
+      assert result.day_of_week == 5
+      assert result.time == ~T[17:00:00]
+    end
+  end
+
   describe "calculate_ms_until/2" do
     test "calculates time until later day in same week" do
-      schedule = make_schedule(3, "09:00:00")  # Wednesday 9am
+      # Wednesday 9am
+      schedule = make_schedule(3, "09:00:00")
 
       # Monday at 8am - should get this Wednesday (2 days + 1 hour)
       {:ok, current_time} = DateTime.from_naive(~N[2024-01-01 08:00:00], "Etc/UTC")
@@ -152,12 +367,13 @@ defmodule Doneosaur.SchedulerTest do
       ms_until = Scheduler.calculate_ms_until(schedule, current_time)
 
       # 2 days * 24 hours * 60 minutes * 60 seconds * 1000 ms + 1 hour in ms
-      expected_ms = (2 * 24 * 60 * 60 * 1000) + (1 * 60 * 60 * 1000)
+      expected_ms = 2 * 24 * 60 * 60 * 1000 + 1 * 60 * 60 * 1000
       assert ms_until == expected_ms
     end
 
     test "calculates time until same day when time hasn't passed yet" do
-      schedule = make_schedule(1, "14:00:00")  # Monday 2pm
+      # Monday 2pm
+      schedule = make_schedule(1, "14:00:00")
 
       # Monday at 9am - should get today in 5 hours
       {:ok, current_time} = DateTime.from_naive(~N[2024-01-01 09:00:00], "Etc/UTC")
@@ -170,7 +386,8 @@ defmodule Doneosaur.SchedulerTest do
     end
 
     test "calculates time until next week when same day but time has passed" do
-      schedule = make_schedule(1, "09:00:00")  # Monday 9am
+      # Monday 9am
+      schedule = make_schedule(1, "09:00:00")
 
       # Monday at 10am - should get next Monday (7 days - 1 hour)
       {:ok, current_time} = DateTime.from_naive(~N[2024-01-01 10:00:00], "Etc/UTC")
@@ -178,12 +395,13 @@ defmodule Doneosaur.SchedulerTest do
       ms_until = Scheduler.calculate_ms_until(schedule, current_time)
 
       # 6 days and 23 hours in milliseconds
-      expected_ms = (6 * 24 * 60 * 60 * 1000) + (23 * 60 * 60 * 1000)
+      expected_ms = 6 * 24 * 60 * 60 * 1000 + 23 * 60 * 60 * 1000
       assert ms_until == expected_ms
     end
 
     test "calculates time until next week when target day is earlier in week" do
-      schedule = make_schedule(2, "09:00:00")  # Tuesday 9am
+      # Tuesday 9am
+      schedule = make_schedule(2, "09:00:00")
 
       # Friday at 8am - should get next Tuesday (4 days + 1 hour)
       {:ok, current_time} = DateTime.from_naive(~N[2024-01-05 08:00:00], "Etc/UTC")
@@ -191,12 +409,13 @@ defmodule Doneosaur.SchedulerTest do
       ms_until = Scheduler.calculate_ms_until(schedule, current_time)
 
       # 4 days and 1 hour in milliseconds
-      expected_ms = (4 * 24 * 60 * 60 * 1000) + (1 * 60 * 60 * 1000)
+      expected_ms = 4 * 24 * 60 * 60 * 1000 + 1 * 60 * 60 * 1000
       assert ms_until == expected_ms
     end
 
     test "handles Saturday to Sunday (1 day)" do
-      schedule = make_schedule(7, "10:00:00")  # Sunday 10am
+      # Sunday 10am
+      schedule = make_schedule(7, "10:00:00")
 
       # Saturday at 9am - should get tomorrow in 25 hours
       {:ok, current_time} = DateTime.from_naive(~N[2024-01-06 09:00:00], "Etc/UTC")
@@ -209,7 +428,8 @@ defmodule Doneosaur.SchedulerTest do
     end
 
     test "handles Sunday to Monday (1 day)" do
-      schedule = make_schedule(1, "09:00:00")  # Monday 9am
+      # Monday 9am
+      schedule = make_schedule(1, "09:00:00")
 
       # Sunday at 11am - should get tomorrow in 22 hours
       {:ok, current_time} = DateTime.from_naive(~N[2024-01-07 11:00:00], "Etc/UTC")
@@ -222,7 +442,8 @@ defmodule Doneosaur.SchedulerTest do
     end
 
     test "handles exact time on target day (should go to next week)" do
-      schedule = make_schedule(1, "09:00:00")  # Monday 9am
+      # Monday 9am
+      schedule = make_schedule(1, "09:00:00")
 
       # Exactly Monday at 9am - should get next Monday (7 days)
       {:ok, current_time} = DateTime.from_naive(~N[2024-01-01 09:00:00], "Etc/UTC")
@@ -235,7 +456,8 @@ defmodule Doneosaur.SchedulerTest do
     end
 
     test "handles Thursday to Monday (next week)" do
-      schedule = make_schedule(1, "07:30:00")  # Monday 7:30am
+      # Monday 7:30am
+      schedule = make_schedule(1, "07:30:00")
 
       # Thursday at 3pm - should get next Monday
       {:ok, current_time} = DateTime.from_naive(~N[2024-01-04 15:00:00], "Etc/UTC")
@@ -244,12 +466,13 @@ defmodule Doneosaur.SchedulerTest do
 
       # From Thursday 3pm to Monday 7:30am
       # 3 days and 16.5 hours
-      expected_ms = (3 * 24 * 60 * 60 * 1000) + (16 * 60 * 60 * 1000) + (30 * 60 * 1000)
+      expected_ms = 3 * 24 * 60 * 60 * 1000 + 16 * 60 * 60 * 1000 + 30 * 60 * 1000
       assert ms_until == expected_ms
     end
 
     test "handles Wednesday to Wednesday next week (time passed)" do
-      schedule = make_schedule(3, "08:00:00")  # Wednesday 8am
+      # Wednesday 8am
+      schedule = make_schedule(3, "08:00:00")
 
       # Wednesday at 9am (time passed) - should get next Wednesday (7 days - 1 hour)
       {:ok, current_time} = DateTime.from_naive(~N[2024-01-03 09:00:00], "Etc/UTC")
@@ -257,12 +480,13 @@ defmodule Doneosaur.SchedulerTest do
       ms_until = Scheduler.calculate_ms_until(schedule, current_time)
 
       # 6 days and 23 hours in milliseconds
-      expected_ms = (6 * 24 * 60 * 60 * 1000) + (23 * 60 * 60 * 1000)
+      expected_ms = 6 * 24 * 60 * 60 * 1000 + 23 * 60 * 60 * 1000
       assert ms_until == expected_ms
     end
 
     test "returns 0 when time is negative (shouldn't happen but handles edge case)" do
-      schedule = make_schedule(1, "08:00:00")  # Monday 8am
+      # Monday 8am
+      schedule = make_schedule(1, "08:00:00")
 
       # If we're already past the time, should return 0 (max of negative and 0)
       {:ok, current_time} = DateTime.from_naive(~N[2024-01-01 08:00:01], "Etc/UTC")

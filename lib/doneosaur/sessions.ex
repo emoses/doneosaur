@@ -17,10 +17,8 @@ defmodule Doneosaur.Sessions do
   @default_list_name "Morning Routine"
 
   def start_link(_opts) do
-    default_list_id = determine_default_list()
-
     Agent.start_link(
-      fn -> %{current_list: default_list_id} end,
+      fn -> %{current_list: nil} end,
       name: @client_registry_name
     )
   end
@@ -135,7 +133,9 @@ defmodule Doneosaur.Sessions do
   Gets the current list ID.
   """
   def get_current_list do
-    Agent.get(@client_registry_name, fn state -> state.current_list end)
+    Agent.get(@client_registry_name, fn state ->
+      state.current_list || determine_default_list()
+    end)
   end
 
   @doc """

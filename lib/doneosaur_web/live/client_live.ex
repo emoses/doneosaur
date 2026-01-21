@@ -60,7 +60,7 @@ defmodule DoneosaurWeb.ClientLive do
       <TaskListDisplay.task_list task_list={@task_list} completed_tasks={@completed_tasks} />
     <% else %>
       <TaskListDisplay.waiting_screen
-        message={"Hi! 👋"}
+        message="Hi! 👋"
         subtitle="Waiting for a task list..."
       />
     <% end %>

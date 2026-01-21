@@ -18,7 +18,6 @@ defmodule Doneosaur.Lists do
   Schedules are ordered by day of week, then by time.
   """
   def list_task_lists do
-
     TaskList
     |> Repo.all()
     |> Repo.preload(:tasks)
@@ -31,7 +30,7 @@ defmodule Doneosaur.Lists do
   """
   def get_task_list!(id) do
     Repo.get!(TaskList, id)
-    |> Repo.preload([tasks: [:image]])
+    |> Repo.preload(tasks: [:image])
     |> Repo.preload(schedules: schedules_query())
   end
 
@@ -287,8 +286,9 @@ defmodule Doneosaur.Lists do
   def list_schedules(preload_task_list \\ false) do
     import Ecto.Query
 
-    query = Schedule
-    |> order_by([s], [asc: s.day_of_week, asc: s.time])
+    query =
+      Schedule
+      |> order_by([s], asc: s.day_of_week, asc: s.time)
 
     query =
       if preload_task_list do
@@ -308,7 +308,7 @@ defmodule Doneosaur.Lists do
 
     Schedule
     |> where([s], s.task_list_id == ^task_list_id)
-    |> order_by([s], [asc: s.day_of_week, asc: s.time])
+    |> order_by([s], asc: s.day_of_week, asc: s.time)
     |> Repo.all()
   end
 
@@ -383,7 +383,8 @@ defmodule Doneosaur.Lists do
     result
   end
 
-  def delete_schedule(schedule_id) when is_integer(schedule_id), do: delete_schedule(%Schedule{id: schedule_id})
+  def delete_schedule(schedule_id) when is_integer(schedule_id),
+    do: delete_schedule(%Schedule{id: schedule_id})
 
   @doc """
   Deletes all schedules for a specific task list.

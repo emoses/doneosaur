@@ -186,7 +186,9 @@ defmodule DoneosaurWeb.Admin.FormLive do
         {:ok, image} = Lists.create_image(%{name: name, type: type})
 
         # Save file to disk
-        dest_dir = Application.get_env(:doneosaur, :image_storage_path, "priv/static/images/tasks")
+        dest_dir =
+          Application.get_env(:doneosaur, :image_storage_path, "priv/static/images/tasks")
+
         File.mkdir_p!(dest_dir)
         dest = Path.join(dest_dir, "#{image.uuid}.#{type}")
         File.cp!(path, dest)
@@ -306,7 +308,6 @@ defmodule DoneosaurWeb.Admin.FormLive do
         </div>
 
         <div class="form-group">
-
           <%= if @tasks == [] do %>
             <p class="text-muted">No tasks yet. Click "Add Task" to create one.</p>
           <% else %>

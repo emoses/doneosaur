@@ -63,9 +63,9 @@ defmodule Doneosaur.MixProject do
 
   defp build_assets(extra_args, _) do
     System.cmd("node", ["build.js" | extra_args],
-               cd: "assets",
-               env: [{"NODE_PATH", Mix.Project.build_path()}],
-               into: IO.stream(:stdio, :line)
+      cd: "assets",
+      env: [{"NODE_PATH", Mix.Project.build_path()}],
+      into: IO.stream(:stdio, :line)
     )
   end
 

@@ -30,6 +30,7 @@ defmodule DoneosaurWeb.Admin.IndexLive do
   @impl true
   def handle_event("sched_task_list", %{"list-id" => list_id}, socket) do
     list_id = String.to_integer(list_id)
+
     {:noreply,
      socket
      |> assign(:sched_task_list, list_id)}
@@ -109,8 +110,9 @@ defmodule DoneosaurWeb.Admin.IndexLive do
     case Lists.delete_schedule(sched) do
       {:ok, _} ->
         {:noreply,
-          socket
-          |> assign(:task_lists, reload_task_list!(socket.assigns.task_lists, sched.task_list_id))}
+         socket
+         |> assign(:task_lists, reload_task_list!(socket.assigns.task_lists, sched.task_list_id))}
+
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to delete sched")}
     end
@@ -125,27 +127,29 @@ defmodule DoneosaurWeb.Admin.IndexLive do
     #   "task_list_id" => "12",
     #   "time-input" => "03:00"
     # }
-    attrs = for x <- 1..7 do
-              if Map.get(vals, "day#{x}", "off") == "on" do
-                %{
-                  day_of_week: x,
-                  time: vals["time-input"],
-                  task_list_id: vals["task_list_id"],
-                }
-              end
-    end
-    |> Enum.reject(&is_nil/1)
+    attrs =
+      for x <- 1..7 do
+        if Map.get(vals, "day#{x}", "off") == "on" do
+          %{
+            day_of_week: x,
+            time: vals["time-input"],
+            task_list_id: vals["task_list_id"]
+          }
+        end
+      end
+      |> Enum.reject(&is_nil/1)
 
     IO.inspect(attrs)
 
     case Lists.create_schedules(attrs) do
       {:ok, _} ->
         task_list_id = String.to_integer(vals["task_list_id"])
+
         {:noreply,
-          socket
-          |> assign(:task_lists, reload_task_list!(socket.assigns.task_lists, task_list_id))
-          |> assign(:sched_task_list, nil)
-        }
+         socket
+         |> assign(:task_lists, reload_task_list!(socket.assigns.task_lists, task_list_id))
+         |> assign(:sched_task_list, nil)}
+
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to create new sched")}
     end
@@ -153,7 +157,9 @@ defmodule DoneosaurWeb.Admin.IndexLive do
 
   defp reload_task_list!(task_lists, id) do
     case Enum.find_index(task_lists, fn l -> l.id == id end) do
-      nil -> raise "List with id #{id} not found"
+      nil ->
+        raise "List with id #{id} not found"
+
       i ->
         newlist = Lists.get_task_list!(id)
         List.replace_at(task_lists, i, newlist)
@@ -208,9 +214,11 @@ defmodule DoneosaurWeb.Admin.IndexLive do
                 <.link navigate={~p"/admin/lists/#{list.id}/edit"} class="btn btn-secondary">
                   Edit
                 </.link>
-                <button phx-click="sched_task_list"
+                <button
+                  phx-click="sched_task_list"
                   phx-value-list-id={list.id}
-                  class="btn btn-secondary">
+                  class="btn btn-secondary"
+                >
                   Schedule
                 </button>
                 <button
@@ -230,23 +238,28 @@ defmodule DoneosaurWeb.Admin.IndexLive do
                 </button>
               </div>
             </div>
-            <.schedule schedules={list.schedules}/>
-
+            <.schedule schedules={list.schedules} />
           </div>
         </div>
       <% end %>
     </div>
-    <.schedule_picker :if={@sched_task_list}
+    <.schedule_picker
+      :if={@sched_task_list}
       task_list_id={@sched_task_list}
-      title={Enum.find(@task_lists, fn t -> t.id == @sched_task_list end) |> Map.get(:name)} />
-    <.clone_picker :if={@clone_list_id}
-      list_name={Enum.find(@task_lists, fn t -> t.id == @clone_list_id end) |> Map.get(:name)} />
+      title={Enum.find(@task_lists, fn t -> t.id == @sched_task_list end) |> Map.get(:name)}
+    />
+    <.clone_picker
+      :if={@clone_list_id}
+      list_name={Enum.find(@task_lists, fn t -> t.id == @clone_list_id end) |> Map.get(:name)}
+    />
     """
   end
 
   attr :schedules, :list, required: true
+
   defp schedule(%{schedules: schedules} = assigns) do
-    assigns = assign(assigns, :day_scheds, Enum.group_by(schedules, &(&1.day_of_week)))
+    assigns = assign(assigns, :day_scheds, Enum.group_by(schedules, & &1.day_of_week))
+
     ~H"""
     <div class="schedule">
       <div :for={day <- 1..7} class="day">
@@ -270,6 +283,7 @@ defmodule DoneosaurWeb.Admin.IndexLive do
 
   attr :task_list_id, :string, required: true
   attr :title, :string
+
   defp schedule_picker(assigns) do
     ~H"""
     <dialog
@@ -291,17 +305,17 @@ defmodule DoneosaurWeb.Admin.IndexLive do
       </button>
       <form phx-submit="create-scheds">
         <h1 :if={@title}>Add schedule for {@title}</h1>
-        <input type="hidden" name="task_list_id" value={@task_list_id}/>
+        <input type="hidden" name="task_list_id" value={@task_list_id} />
         <div class="days">
-            <div :for={day <- 1..7} class="day">
-                <label for={"scheduler-day#{day}"}>{Lists.Schedule.day_name(day)}</label>
-                <input type="checkbox" id={"scheduler-day#{day}"} name={"day#{day}"}/>
-            </div>
+          <div :for={day <- 1..7} class="day">
+            <label for={"scheduler-day#{day}"}>{Lists.Schedule.day_name(day)}</label>
+            <input type="checkbox" id={"scheduler-day#{day}"} name={"day#{day}"} />
+          </div>
         </div>
 
         <div class="time">
-            <label for="time-input">Time</label>
-            <input name="time-input" type="time" required/>
+          <label for="time-input">Time</label>
+          <input name="time-input" type="time" required />
         </div>
 
         <div class="button-group">
@@ -320,6 +334,7 @@ defmodule DoneosaurWeb.Admin.IndexLive do
   end
 
   attr :list_name, :string, required: true
+
   defp clone_picker(assigns) do
     ~H"""
     <dialog

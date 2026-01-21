@@ -29,6 +29,14 @@ defmodule Doneosaur.Scheduler do
     GenServer.call(__MODULE__, :reload)
   end
 
+  @doc """
+  Gets the most recently scheduled list ID.
+  Optionally accepts a DateTime to use for determining "now" (useful for testing).
+  """
+  def get_most_recent_list_id(at_time \\ nil) do
+    GenServer.call(__MODULE__, {:get_most_recent_list_id, at_time})
+  end
+
   ## Server Callbacks
 
   @impl true
@@ -54,6 +62,19 @@ defmodule Doneosaur.Scheduler do
     Logger.info("Reloading schedules")
     new_state = load_and_schedule(state)
     {:reply, :ok, new_state}
+  end
+
+  @impl true
+  def handle_call({:get_most_recent_list_id, at_time}, _from, state) do
+    now = at_time || DateTime.now!(get_timezone())
+
+    case find_most_recent_schedule(state.schedules, now) do
+      nil ->
+        {:reply, nil, state}
+
+      sched ->
+        {:reply, sched.task_list_id, state}
+    end
   end
 
   @impl true
@@ -96,10 +117,15 @@ defmodule Doneosaur.Scheduler do
       next_schedule ->
         # Calculate when this schedule should activate
         ms_until_activation = calculate_ms_until(next_schedule, now)
-        Logger.info("Next activation: #{format_schedule(next_schedule)} in #{ms_until_activation}ms")
+
+        Logger.info(
+          "Next activation: #{format_schedule(next_schedule)} in #{ms_until_activation}ms"
+        )
 
         # Schedule timer for next activation
-        timer_ref = Process.send_after(self(), {:activate, next_schedule.task_list_id}, ms_until_activation)
+        timer_ref =
+          Process.send_after(self(), {:activate, next_schedule.task_list_id}, ms_until_activation)
+
         Map.put(state, :timer_ref, timer_ref)
     end
   end
@@ -113,7 +139,12 @@ defmodule Doneosaur.Scheduler do
     target_day = schedule.day_of_week
 
     diff = target_day - current_day
-    diff = if diff < 0 or (diff == 0 && Time.compare(schedule.time, DateTime.to_time(now)) != :gt), do: diff + 7, else: diff
+
+    diff =
+      if diff < 0 or (diff == 0 && Time.compare(schedule.time, DateTime.to_time(now)) != :gt),
+        do: diff + 7,
+        else: diff
+
     {:ok, target_datetime} = DateTime.new(Date.add(now, diff), schedule.time, get_timezone())
 
     ms_until = DateTime.diff(target_datetime, now, :millisecond)
@@ -124,14 +155,16 @@ defmodule Doneosaur.Scheduler do
     current_day = Date.day_of_week(t)
     current_time = DateTime.to_time(t)
 
-    current_day < schedule.day_of_week or (current_day == schedule.day_of_week and Time.compare(current_time, schedule.time) == :lt)
+    current_day < schedule.day_of_week or
+      (current_day == schedule.day_of_week and Time.compare(current_time, schedule.time) == :lt)
   end
 
   defp is_after?(t, schedule) do
     current_day = Date.day_of_week(t)
     current_time = DateTime.to_time(t)
 
-    current_day > schedule.day_of_week or (current_day == schedule.day_of_week and Time.compare(current_time, schedule.time) == :gt)
+    current_day > schedule.day_of_week or
+      (current_day == schedule.day_of_week and Time.compare(current_time, schedule.time) == :gt)
   end
 
   @doc """
@@ -140,22 +173,36 @@ defmodule Doneosaur.Scheduler do
 
   Schedules should be sorted by day_of_week and time.
   """
-  def find_next_schedule(schedules, current_time)
-  def find_next_schedule([], _current_time), do: nil
-
   def find_next_schedule(schedules, current_time) do
+    find_next(schedules, current_time, &is_before?/2, &is_after?/2)
+  end
+
+  defp find_next([], _, _, _), do: nil
+
+  defp find_next(schedules, current_time, next, prev) do
     [first | _] = schedules
     last = List.last(schedules)
 
     cond do
       # If it's before the first schedule or after the last schedule, use the first schedule
-      is_before?(current_time, first) -> first
-      is_after?(current_time, last) -> first
+      next.(current_time, first) ->
+        first
+
+      prev.(current_time, last) ->
+        first
+
       true ->
         # Find the first schedule that comes after current time
         # If none found (e.g., current_time equals last schedule), wrap to first
-        Enum.find(schedules, first, fn schedule -> is_before?(current_time, schedule) end)
+        Enum.find(schedules, first, fn schedule -> next.(current_time, schedule) end)
     end
+  end
+
+  @doc """
+  Finds the schedule that comes most recently before the current time
+  """
+  def find_most_recent_schedule(schedules, current_time) do
+    find_next(Enum.reverse(schedules), current_time, &is_after?/2, &is_before?/2)
   end
 
   defp format_schedule(schedule) do

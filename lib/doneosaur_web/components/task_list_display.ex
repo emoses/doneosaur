@@ -21,10 +21,10 @@ defmodule DoneosaurWeb.TaskListDisplay do
     ~H"""
     <div class="container">
       <audio id="task-sound" preload="auto">
-        <source src="/audio/badink.mp3" type="audio/mpeg">
+        <source src="/audio/badink.mp3" type="audio/mpeg" />
       </audio>
       <audio id="success-sound" preload="auto">
-        <source src="/audio/success.wav" type="audio/wav">
+        <source src="/audio/success.wav" type="audio/wav" />
       </audio>
       <script>
         window.addEventListener('doneosaur:task_toggled', (e) => {
@@ -51,39 +51,40 @@ defmodule DoneosaurWeb.TaskListDisplay do
         </div>
         <div class="controls">
           <button class="btn btn-secondary" phx-click="reset_list">
-            <span class="btn-icon">🔄</span>
-            Reset
+            <span class="btn-icon">🔄</span> Reset
           </button>
         </div>
       </header>
 
       <div class="tasks-container" style={"--n-tasks: #{length(@task_list.tasks)}"}>
         <%= if Enum.all?(@task_list.tasks, fn t -> MapSet.member?(@completed_tasks, t.id) end) do %>
-          <.complete>All<br/>Done!</.complete>
+          <.complete>All<br />Done!</.complete>
         <% else %>
-            <div
+          <div
             :for={task <- @task_list.tasks}
             class={"task-item #{if MapSet.member?(@completed_tasks, task.id), do: "completed", else: ""}"}
             phx-click={
-              JS.dispatch("doneosaur:task_toggled", detail: %{
-                remaining: length(@task_list.tasks) - MapSet.size(@completed_tasks),
-                checked: MapSet.member?(@completed_tasks, task.id),
-              })
+              JS.dispatch("doneosaur:task_toggled",
+                detail: %{
+                  remaining: length(@task_list.tasks) - MapSet.size(@completed_tasks),
+                  checked: MapSet.member?(@completed_tasks, task.id)
+                }
+              )
               |> JS.push("toggle_task", value: %{"task-id": task.id})
             }
-            >
+          >
             <% image_url = if task.image_id, do: Lists.get_image_url(task.image), else: nil %>
             <input
-                type="checkbox"
-                id={"task-#{task.id}"}
-                checked={MapSet.member?(@completed_tasks, task.id)}
-                class={"task-checkbox #{if image_url, do: "has-image", else: ""}"}
-                style={if image_url, do: "background-image: url(#{image_url})", else: ""}
+              type="checkbox"
+              id={"task-#{task.id}"}
+              checked={MapSet.member?(@completed_tasks, task.id)}
+              class={"task-checkbox #{if image_url, do: "has-image", else: ""}"}
+              style={if image_url, do: "background-image: url(#{image_url})", else: ""}
             />
             <label for={"task-#{task.id}"} class="task-label">
-                {task.text}
+              {task.text}
             </label>
-            </div>
+          </div>
         <% end %>
       </div>
     </div>
@@ -92,6 +93,7 @@ defmodule DoneosaurWeb.TaskListDisplay do
 
   slot :inner_block, required: true
   attr :img_url, :string, default: nil
+
   defp complete(assigns) do
     ~H"""
     <div class="complete" id="complete" phx-hook=".PlayComplete">
@@ -115,7 +117,6 @@ defmodule DoneosaurWeb.TaskListDisplay do
     </script>
     """
   end
-
 
   @doc """
   Renders a waiting screen when no task list is available.
